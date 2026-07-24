@@ -6,10 +6,53 @@ const esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&
 const money=x=>"$"+Math.round(Number(x||0)).toLocaleString("zh-TW");
 const today=()=>new Date().toISOString().slice(0,10),ym=()=>today().slice(0,7);
 function toast(t){$("toast").textContent=t;$("toast").hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>$("toast").hidden=true,3000)}
+function showStatus(type,title,message){
+  const modal=$("statusModal"),spinner=$("statusSpinner"),icon=$("statusIcon");
+  $("statusTitle").textContent=title;
+  $("statusMessage").textContent=message||"";
+  modal.hidden=false;
+  if(type==="loading"){
+    spinner.hidden=false;icon.hidden=true;icon.className="status-icon";
+  }else{
+    spinner.hidden=true;icon.hidden=false;
+    icon.className="status-icon "+(type==="success"?"ok":"error");
+    icon.textContent=type==="success"?"✓":"!";
+  }
+}
+function hideStatus(delay=0){
+  clearTimeout(hideStatus.t);
+  hideStatus.t=setTimeout(()=>$("statusModal").hidden=true,delay);
+}
+
 async function api(mode,p={}){const r=await fetch(cfg.API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({mode,token,...p})});const j=await r.json();if(!j.ok)throw Error(j.message||"操作失敗");return j}
 function page(n){document.querySelectorAll(".page").forEach(x=>x.classList.toggle("active",x.id==="page-"+n));document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("active",x.dataset.page===n))}
 async function boot(){["offDate","oilDate","shiftDate"].forEach(id=>$(id).value=today());$("salaryMonth").value=$("adminMonth").value=ym();const p=await api("publicConfig");$("loginName").innerHTML=p.users.map(x=>`<option>${esc(x)}</option>`).join("");if(token){try{await refresh()}catch(e){logout()}}}
-async function login(){try{const r=await api("login",{name:$("loginName").value,pin:$("loginPin").value});token=r.token;localStorage.setItem("savage_token",token);me=r.user;data=r;showApp();renderAll()}catch(e){$("loginMsg").textContent=e.message}}
+async function login(){
+  const name=$("loginName").value,pin=$("loginPin").value;
+  $("loginMsg").textContent="";
+  if(!name||!pin){
+    showStatus("error","資料未填完整","請選擇姓名並輸入密碼。");
+    hideStatus(1800);
+    return;
+  }
+  $("loginBtn").disabled=true;
+  showStatus("loading","登入中","正在確認帳號與密碼，請稍候…");
+  try{
+    const r=await api("login",{name,pin});
+    token=r.token;
+    localStorage.setItem("savage_token",token);
+    me=r.user;data=r;
+    showStatus("success","已登入",`${me.name}，歡迎回來！`);
+    setTimeout(()=>{showApp();renderAll();hideStatus();},900);
+  }catch(e){
+    const msg=e.message||"登入失敗，請稍後再試";
+    $("loginMsg").textContent=msg;
+    showStatus("error",msg.includes("密碼")?"密碼錯誤":"登入失敗",msg);
+    hideStatus(2200);
+  }finally{
+    $("loginBtn").disabled=false;
+  }
+}
 function logout(){token="";me=null;data=null;localStorage.removeItem("savage_token");$("appView").hidden=true;$("loginView").hidden=false}
 function showApp(){$("loginView").hidden=true;$("appView").hidden=false;$("hello").textContent=`${me.name}，你好`;$("todayText").textContent=new Date().toLocaleDateString("zh-TW",{dateStyle:"full"});$("adminTab").hidden=me.role!=="admin"}
 async function refresh(month){const r=await api("refresh",{month:month||ym()});me=r.user;data=r;showApp();renderAll()}
