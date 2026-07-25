@@ -1,6 +1,28 @@
 <!doctype html>
 <html lang="zh-Hant">
 <head>
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+
+  OneSignalDeferred.push(async function (OneSignal) {
+    await OneSignal.init({
+      appId: "85f48a6b-7c6b-4013-a74d-aa59d3f94a4f",
+      serviceWorkerPath: "OneSignalSDKWorker.js",
+      serviceWorkerParam: {
+        scope: "/savage-staff-system/"
+      },
+      notifyButton: {
+        enable: true
+      }
+    });
+  });
+</script>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#89c8d3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="小野人員工系統">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>小野人員工系統</title><link rel="stylesheet" href="style.css">
 </head>
