@@ -25,3 +25,14 @@ button{border:0;border-radius:11px;padding:11px 14px;font-weight:800;cursor:poin
 .status-icon.ok{background:#e8f8f0;color:var(--ok)}
 .status-icon.error{background:#fff0f0;color:var(--danger)}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+.sub-card{border:1px solid #e3ecee;border-radius:14px;padding:14px;margin:10px 0;background:#fff}
+.sub-head{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.sub-flow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.sub-arrow{color:var(--muted)}
+.sub-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.sub-actions button{flex:1;min-width:90px}
+.badge.pending{background:#fff3cd;color:#805d00}
+.badge.accepted{background:#e8f8f0;color:#146343}
+.badge.rejected{background:#fff0f0;color:#922}
+.badge.approved{background:#e6f1ff;color:#205b9a}

@@ -17,7 +17,7 @@
 <header class="top"><div><b id="hello"></b><small id="todayText"></small></div><button id="logoutBtn">登出</button></header>
 <nav id="tabs" class="tabs">
 <button data-page="today" class="active">今日</button><button data-page="month">月班表</button>
-<button data-page="off">排假</button><button data-page="oil">里程</button>
+<button data-page="off">排假</button><button data-page="substitute">代班</button><button data-page="oil">里程</button>
 <button data-page="salary">薪資</button><button data-page="admin" id="adminTab" hidden>老闆後台</button>
 </nav>
 <section id="page-today" class="page active"></section>
@@ -29,6 +29,18 @@
 <label>時段<select id="offSlot"><option>全天排休</option><option>上午排休</option><option>下午排休</option><option>晚班排休</option></select></label>
 <label>備註<input id="offNote"></label><button id="offSubmit" class="primary">送出申請</button></div>
 <div id="offList"></div></section>
+
+
+<section id="page-substitute" class="page">
+<div class="card"><h2>申請代班</h2>
+<label>選擇我的班<select id="subShift"></select></label>
+<label>指定代班員工<select id="subEmployee"><option value="">公開徵求代班</option></select></label>
+<label>原因或備註<input id="subNote" placeholder="例：臨時有事、照顧小孩"></label>
+<button id="subSubmit" class="primary">送出代班申請</button>
+<small>指定員工接受後，仍需老闆核准；公開徵求則由其他員工主動接班。</small></div>
+<div class="card"><h2>可接的代班</h2><div id="subAvailable"></div></div>
+<div class="card"><h2>我的代班紀錄</h2><div id="subList"></div></div>
+</section>
 
 <section id="page-oil" class="page">
 <div class="card"><h2>機車里程補貼</h2>
@@ -68,6 +80,7 @@
 <div id="conflictBox"></div><button id="saveShift" class="primary">新增排班</button>
 <div id="adminSchedule"></div></div>
 
+<div class="card"><h2>代班審核</h2><div id="adminSubstitute"></div></div>
 <div class="card"><h2>排假審核與薪資</h2><label>月份<input id="adminMonth" type="month"></label>
 <div class="grid2"><button id="adminLoad" class="primary">載入後台</button><button id="exportPayroll">匯出薪資 CSV</button></div>
 <div id="adminResult"></div></div>
