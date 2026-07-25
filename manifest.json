@@ -1,5 +1,4 @@
 {
-  "$schema": "https://json.schemastore.org/web-manifest-combined.json",
   "name": "小野人員工排班薪資系統",
   "short_name": "小野人員工系統",
   "description": "小野人餐盒製造所員工排班、排假、代班、里程與薪資系統",
