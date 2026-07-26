@@ -35,23 +35,79 @@ async function login(){
     hideStatus(1800);
     return;
   }
+
+  async function linkOneSignalUser(user) {
+  try {
+    const externalId = user.employeeId
+      ? `staff_${user.employeeId}`
+      : `staff_${user.name}`;
+
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+
+    window.OneSignalDeferred.push(async function (OneSignal) {
+      await OneSignal.login(externalId);
+
+      await OneSignal.User.addTags({
+        employee_name: user.name,
+        employee_id: user.employeeId || "",
+        role: user.role || "staff"
+      });
+
+      console.log("OneSignal 已綁定員工：", externalId);
+    });
+  } catch (error) {
+    console.warn("OneSignal 員工綁定失敗：", error);
+  }
+}
+
+async function unlinkOneSignalUser() {
+  try {
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+
+    window.OneSignalDeferred.push(async function (OneSignal) {
+      await OneSignal.logout();
+      console.log("OneSignal 員工身分已解除");
+    });
+  } catch (error) {
+    console.warn("OneSignal 登出失敗：", error);
+  }
+}
   $("loginBtn").disabled=true;
   showStatus("loading","登入中","正在確認帳號與密碼，請稍候…");
-  try{
-    const r=await api("login",{name,pin});
-    token=r.token;
-    localStorage.setItem("savage_token",token);
-    me=r.user;data=r;
-    showStatus("success","已登入",`${me.name}，歡迎回來！`);
-    setTimeout(()=>{showApp();renderAll();hideStatus();},900);
-  }catch(e){
-    const msg=e.message||"登入失敗，請稍後再試";
-    $("loginMsg").textContent=msg;
-    showStatus("error",msg.includes("密碼")?"密碼錯誤":"登入失敗",msg);
-    hideStatus(2200);
-  }finally{
-    $("loginBtn").disabled=false;
-  }
+try {
+  const r = await api("login", { name, pin });
+
+  token = r.token;
+  localStorage.setItem("savage_token", token);
+
+  me = r.user;
+  data = r;
+
+  await linkOneSignalUser(me);
+
+  showStatus("success", `已登入，${me.name}，歡迎回來！`);
+
+  setTimeout(() => {
+    showApp();
+    renderAll();
+    hideStatus();
+  }, 900);
+
+} catch (e) {
+  const msg = e.message || "登入失敗，請稍後再試";
+
+  $("loginMsg").textContent = msg;
+
+  showStatus(
+    "error",
+    msg.includes("密碼") ? "密碼錯誤" : "登入失敗",
+    msg
+  );
+
+  hideStatus(2200);
+
+} finally {
+  $("loginBtn").disabled = false;
 }
 function logout(){token="";me=null;data=null;localStorage.removeItem("savage_token");$("appView").hidden=true;$("loginView").hidden=false}
 function showApp(){$("loginView").hidden=true;$("appView").hidden=false;$("hello").textContent=`${me.name}，你好`;$("todayText").textContent=new Date().toLocaleDateString("zh-TW",{dateStyle:"full"});$("adminTab").hidden=me.role!=="admin"}
