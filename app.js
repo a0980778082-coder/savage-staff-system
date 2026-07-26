@@ -109,6 +109,7 @@ try {
 } finally {
   $("loginBtn").disabled = false;
 }
+}
 function logout(){token="";me=null;data=null;localStorage.removeItem("savage_token");$("appView").hidden=true;$("loginView").hidden=false}
 function showApp(){$("loginView").hidden=true;$("appView").hidden=false;$("hello").textContent=`${me.name}，你好`;$("todayText").textContent=new Date().toLocaleDateString("zh-TW",{dateStyle:"full"});$("adminTab").hidden=me.role!=="admin"}
 async function refresh(month){const r=await api("refresh",{month:month||ym()});me=r.user;data=r;showApp();renderAll()}
