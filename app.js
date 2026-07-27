@@ -167,13 +167,49 @@ async function submitSubstitute(){
 async function submitOil(){try{await api("oil",{date:$("oilDate").value,start:$("oilStart").value,end:$("oilEnd").value,note:$("oilNote").value,photo:await toDataUrl($("oilPhoto").files[0])});toast("里程已送出");await refresh()}catch(e){toast(e.message)}}
 async function loadSalary(){try{const r=await api("salary",{month:$("salaryMonth").value});renderSalary(r.salary)}catch(e){toast(e.message)}}
 async function downloadPayslip(){try{toast("正在產生薪資條");const r=await api("downloadPayslip",{month:$("salaryMonth").value});const raw=atob(r.base64),bytes=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);const url=URL.createObjectURL(new Blob([bytes],{type:"application/pdf"})),a=document.createElement("a");a.href=url;a.download=r.filename||"薪資條.pdf";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);toast("薪資條已下載")}catch(e){toast(e.message)}}
-async function loadAdmin(){try{const r=await api("adminDashboard",{month:$("adminMonth").value});employees=r.employees;renderEmployees();renderAdminSchedule(r.schedule);$("settingOilPrice").value=r.settings.oilPrice;$("settingEfficiency").value=r.settings.efficiency;$("shiftEmployee").innerHTML=employees.filter(x=>x.status==="在職").map(x=>`<option>${esc(x.name)}</option>`).join("");$("adminSubstitute").innerHTML=(r.pendingSubstitutes||[]).length?(r.pendingSubstitutes||[]).map(x=>`
+async function loadAdmin(){try{const r=await api("adminDashboard",{month:$("adminMonth").value});employees=r.employees;renderEmployees();renderAdminSchedule(r.schedule);$("settingOilPrice").value=r.settings.oilPrice;$("settingEfficiency").value=r.settings.efficiency;$("shiftEmployee").innerHTML=employees.filter(x=>x.status==="在職").map(x=>`<option>${esc(x.name)}</option>`).join("");?(r.pendingSubstitutes||[]).map(x=>`
 <div class="sub-card">
 <div class="sub-head"><b>${x.date}｜${esc(x.timeSlot)}</b><span class="badge ${subStatusClass(x.status)}">${esc(x.status)}</span></div>
-<div class="sub-flow"><span>原班：${esc(x.requester)}</span><span class="sub-arrow">→</span><span>代班：${esc(x.substituteEmployee||"尚未指定")}</span></div>
-<div class="muted">${esc(x.note||"")}</div>
-<div class="sub-actions"><button class="primary" data-admin-sub="${x.row}" data-admin-status="已核准">核准代班</button><button class="red" data-admin-sub="${x.row}" data-admin-status="已拒絕">拒絕</button></div>
-</div>`).join(""):"目前沒有待審核的代班。";
+<div class="sub-flow"><span>原班：${esc(x.requester)}</span><span class=const pendingSubstitutes = r.pendingSubstitutes || [];
+
+$("adminSubstitute").innerHTML = pendingSubstitutes.length
+  ? pendingSubstitutes.map(x => `
+      <div class="sub-card">
+        <div class="sub-head">
+          <b>${esc(x.date)}｜${esc(x.timeSlot)}</b>
+          <span class="badge ${subStatusClass(x.status)}">
+            ${esc(x.status)}
+          </span>
+        </div>
+
+        <div class="sub-flow">
+          <span>原班：${esc(x.requester)}</span>
+          <span class="sub-arrow">→</span>
+          <span>代班：${esc(x.substituteEmployee || "尚未指定")}</span>
+        </div>
+
+        <div class="muted">${esc(x.note || "")}</div>
+
+        <div class="sub-actions">
+          <button
+            class="primary"
+            data-admin-sub="${x.row}"
+            data-admin-status="已核准"
+          >
+            核准代班
+          </button>
+
+          <button
+            class="red"
+            data-admin-sub="${x.row}"
+            data-admin-status="已拒絕"
+          >
+            拒絕代班
+          </button>
+        </div>
+      </div>
+    `).join("")
+  : "目前沒有待審核的代班。";
 $("adminResult").innerHTML=`<h3>待審核排假</h3>${r.pendingOff.map(x=>`<div class="shift"><div>${x.requestDate}</div><div><b>${esc(x.employeeName)}｜${esc(x.slot)}</b></div><div><button class="mini" data-off="${x.row}" data-status="已核准">核准</button><button class="mini red" data-off="${x.row}" data-status="已拒絕">拒絕</button></div></div>`).join("")||"目前沒有待審核"}<h3>薪資預覽</h3><div class="table-wrap"><table><tr><th>員工</th><th>時數</th><th>基本</th><th>獎金</th><th>里程</th><th>扣款</th><th>實領</th></tr>${r.payroll.map(x=>`<tr><td>${esc(x.name)}</td><td>${x.hours}</td><td>${money(x.basePay)}</td><td>${money(x.bonuses)}</td><td>${money(x.oilSubsidy)}</td><td>${money(x.deductions)}</td><td><b>${money(x.netPay)}</b></td></tr>`).join("")}</table></div>`}catch(e){toast(e.message)}}
 function renderEmployees(){$("employeeList").innerHTML=employees.map(x=>`<div class="shift"><div>${esc(x.id)}</div><div><b>${esc(x.name)}</b><div class="muted">${esc(x.salaryType)}｜${esc(x.status)}</div></div><div><button class="mini" data-edit-emp="${x.row}">編輯</button><button class="mini red" data-disable-emp="${x.row}">${x.status==="在職"?"停用":"恢復"}</button></div></div>`).join("")}
 function renderAdminSchedule(rows){$("adminSchedule").innerHTML=`<div class="table-wrap"><table><tr><th>日期</th><th>員工</th><th>班別</th><th>時數</th><th></th></tr>${rows.map(x=>`<tr><td>${x.date}</td><td>${esc(x.employeeName)}</td><td>${esc(x.timeSlot)}</td><td>${x.plannedHours??""}</td><td><button class="mini red" data-delete-shift="${x.row}">刪除</button></td></tr>`).join("")}</table></div>`}
