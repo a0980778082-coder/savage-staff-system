@@ -24,19 +24,18 @@ function hideStatus(delay=0){
   hideStatus.t=setTimeout(()=>$("statusModal").hidden=true,delay);
 }
 
-async function api(mode,p={}){const r=await fetch(cfg.API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({mode,token,...p})});const j=await r.json();if(!j.ok)throw Error(j.message||"操作失敗");return j}
-function page(n){document.querySelectorAll(".page").forEach(x=>x.classList.toggle("active",x.id==="page-"+n));document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("active",x.dataset.page===n))}
-async function boot(){["offDate","oilDate","shiftDate"].forEach(id=>$(id).value=today());$("salaryMonth").value=$("adminMonth").value=ym();const p=await api("publicConfig");$("loginName").innerHTML=p.users.map(x=>`<option>${esc(x)}</option>`).join("");if(token){try{await refresh()}catch(e){logout()}}}
-async function login(){
-  const name=$("loginName").value,pin=$("loginPin").value;
-  $("loginMsg").textContent="";
-  if(!name||!pin){
-    showStatus("error","資料未填完整","請選擇姓名並輸入密碼。");
-    hideStatus(1800);
-    return;
-  }
+async function api(mode,p={}) {
+  const r=await fetch(cfg.API_URL,{
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify({mode,token,...p})
+  });
+  const j=await r.json();
+  if(!j.ok)throw Error(j.message||"操作失敗");
+  return j;
+}
 
-  async function linkOneSignalUser(user) {
+async function linkOneSignalUser(user) {
   try {
     const externalId = user.employeeId
       ? `staff_${user.employeeId}`
@@ -72,45 +71,104 @@ async function unlinkOneSignalUser() {
     console.warn("OneSignal 登出失敗：", error);
   }
 }
+
+function page(n) {
+  document.querySelectorAll(".page").forEach(x=>
+    x.classList.toggle("active",x.id==="page-"+n)
+  );
+  document.querySelectorAll(".tabs button").forEach(x=>
+    x.classList.toggle("active",x.dataset.page===n)
+  );
+}
+
+async function boot() {
+  ["offDate","oilDate","shiftDate"].forEach(id=>{
+    if($(id))$(id).value=today();
+  });
+
+  if($("salaryMonth"))$("salaryMonth").value=ym();
+  if($("adminMonth"))$("adminMonth").value=ym();
+
+  const p=await api("publicConfig");
+  $("loginName").innerHTML=(p.users||[])
+    .map(x=>`<option>${esc(x)}</option>`)
+    .join("");
+
+  if(token){
+    try{
+      await refresh();
+      await linkOneSignalUser(me);
+    }catch(e){
+      await logout();
+    }
+  }
+}
+
+async function login() {
+  const name=$("loginName").value;
+  const pin=$("loginPin").value;
+
+  $("loginMsg").textContent="";
+
+  if(!name||!pin){
+    showStatus("error","資料未填完整","請選擇姓名並輸入密碼。");
+    hideStatus(1800);
+    return;
+  }
+
   $("loginBtn").disabled=true;
   showStatus("loading","登入中","正在確認帳號與密碼，請稍候…");
-try {
-  const r = await api("login", { name, pin });
 
-  token = r.token;
-  localStorage.setItem("savage_token", token);
+  try{
+    const r=await api("login",{name,pin});
 
-  me = r.user;
-  data = r;
+    token=r.token;
+    localStorage.setItem("savage_token",token);
 
-  await linkOneSignalUser(me);
+    me=r.user;
+    data=r;
 
-  showStatus("success", `已登入，${me.name}，歡迎回來！`);
+    await linkOneSignalUser(me);
 
-  setTimeout(() => {
-    showApp();
-    renderAll();
-    hideStatus();
-  }, 900);
+    showStatus("success",`已登入，${me.name}，歡迎回來！`,"");
 
-} catch (e) {
-  const msg = e.message || "登入失敗，請稍後再試";
+    setTimeout(()=>{
+      showApp();
+      renderAll();
+      hideStatus();
+    },900);
+  }catch(e){
+    const msg=e.message||"登入失敗，請稍後再試";
 
-  $("loginMsg").textContent = msg;
+    $("loginMsg").textContent=msg;
 
-  showStatus(
-    "error",
-    msg.includes("密碼") ? "密碼錯誤" : "登入失敗",
-    msg
-  );
+    showStatus(
+      "error",
+      msg.includes("密碼")?"密碼錯誤":"登入失敗",
+      msg
+    );
 
-  hideStatus(2200);
-
-} finally {
-  $("loginBtn").disabled = false;
+    hideStatus(2200);
+  }finally{
+    $("loginBtn").disabled=false;
+  }
 }
+async function logout(){
+  try{
+    await unlinkOneSignalUser();
+  }catch(e){
+    console.warn("解除 OneSignal 身分失敗：",e);
+  }
+
+  token="";
+  me=null;
+  data=null;
+  localStorage.removeItem("savage_token");
+
+  $("appView").hidden=true;
+  $("loginView").hidden=false;
+  if($("loginPin"))$("loginPin").value="";
 }
-function logout(){token="";me=null;data=null;localStorage.removeItem("savage_token");$("appView").hidden=true;$("loginView").hidden=false}
 function showApp(){$("loginView").hidden=true;$("appView").hidden=false;$("hello").textContent=`${me.name}，你好`;$("todayText").textContent=new Date().toLocaleDateString("zh-TW",{dateStyle:"full"});$("adminTab").hidden=me.role!=="admin"}
 async function refresh(month){const r=await api("refresh",{month:month||ym()});me=r.user;data=r;showApp();renderAll()}
 function renderAll(){renderToday();renderMonth();renderOff();renderSubstitute();renderOil();renderSalary(data.salary)}
