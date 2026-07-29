@@ -380,6 +380,20 @@ async function checkConflict(){if(!$("shiftDate").value||!$("shiftEmployee").val
 async function saveShift(){try{if(await checkConflict())throw Error("此員工當天有排假，已阻止誤排班");const type=$("shiftType").value==="自訂"?$("shiftCustom").value:$("shiftType").value;await api("saveShift",{date:$("shiftDate").value,employee:$("shiftEmployee").value,timeSlot:type,hours:$("shiftHours").value});toast("排班已新增");await loadAdmin();await refresh()}catch(e){toast(e.message)}}
 async function saveEmployee(){try{await api("saveEmployee",{row:$("empEditRow").value,name:$("empName").value,pin:$("empPin").value,role:$("empRole").value,salaryType:$("empSalaryType").value,employeeId:$("empId").value,monthly:$("empMonthly").value,hourly:$("empHourly").value});toast("員工資料已儲存");["empEditRow","empName","empPin","empId","empMonthly","empHourly"].forEach(id=>$(id).value="");await loadAdmin()}catch(e){toast(e.message)}}
 async function saveSettings(){try{await api("saveSettings",{oilPrice:$("settingOilPrice").value,efficiency:$("settingEfficiency").value});toast("設定已儲存")}catch(e){toast(e.message)}}
+async function publishSchedule(){
+  try{
+    const month=$("adminMonth").value;
+    if(!month)throw Error("請先選擇要公布的月份");
+    if(!confirm(`確定公布 ${month} 班表並通知全體員工嗎？`))return;
+    showStatus("loading","正在公布班表","正在發送通知給全體員工…");
+    const r=await api("publishSchedule",{month});
+    showStatus("success","班表已公布",`${r.month} 班表已通知 ${r.count} 位員工。`);
+    hideStatus(2200);
+  }catch(e){
+    showStatus("error","公布失敗",e.message);
+    hideStatus(2200);
+  }
+}
 async function exportPayroll(){try{const r=await api("exportPayroll",{month:$("adminMonth").value});const a=document.createElement("a");a.href="data:text/csv;charset=utf-8,\uFEFF"+encodeURIComponent(r.csv);a.download=`小野人薪資表_${$("adminMonth").value}.csv`;a.click()}catch(e){toast(e.message)}}
 document.addEventListener("click",async e=>{let sb=e.target.closest("[data-sub-accept]");
 if(sb){try{await api("respondSubstitute",{row:+sb.dataset.subAccept,action:"accept"});toast("已接受代班，等待老闆核准");await refresh()}catch(err){toast(err.message)}return}
@@ -392,7 +406,7 @@ if(sb){try{await api("reviewSubstitute",{row:+sb.dataset.adminSub,status:sb.data
 let b=e.target.closest("[data-off]");if(b){await api("reviewOff",{row:+b.dataset.off,status:b.dataset.status});await loadAdmin();await refresh();return}b=e.target.closest("[data-edit-emp]");if(b){const x=employees.find(v=>v.row==b.dataset.editEmp);if(!x)return;$("empEditRow").value=x.row;$("empName").value=x.name;$("empPin").value=x.pin;$("empRole").value=x.role;$("empSalaryType").value=x.salaryType;$("empId").value=x.id;$("empMonthly").value=x.monthly;$("empHourly").value=x.hourly;return}b=e.target.closest("[data-disable-emp]");if(b){await api("toggleEmployee",{row:+b.dataset.disableEmp});await loadAdmin();return}b=e.target.closest("[data-delete-shift]");if(b){await api("deleteShift",{row:+b.dataset.deleteShift});await loadAdmin();await refresh()}})
 $("tabs").onclick=e=>{const b=e.target.closest("[data-page]");if(b)page(b.dataset.page)};
 $("loginBtn").onclick=login;$("logoutBtn").onclick=logout;$("offSubmit").onclick=submitOff;$("subSubmit").onclick=submitSubstitute;$("oilSubmit").onclick=submitOil;$("salaryLoad").onclick=loadSalary;
-$("adminLoad").onclick=loadAdmin;$("saveShift").onclick=saveShift;$("saveEmployee").onclick=saveEmployee;$("saveSettings").onclick=saveSettings;$("exportPayroll").onclick=exportPayroll;
+$("adminLoad").onclick=loadAdmin;$("saveShift").onclick=saveShift;$("saveEmployee").onclick=saveEmployee;$("saveSettings").onclick=saveSettings;$("publishSchedule").onclick=publishSchedule;$("exportPayroll").onclick=exportPayroll;
 $("shiftDate").onchange=checkConflict;$("shiftEmployee").onchange=checkConflict;$("oilPhoto").onchange=e=>{$("oilPreview").innerHTML=e.target.files[0]?`<img class="photo" src="${URL.createObjectURL(e.target.files[0])}">`:""};
 boot().catch(e=>toast(e.message));
 })();
