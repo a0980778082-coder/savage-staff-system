@@ -99,11 +99,16 @@
 </div>
 
 <div class="card"><h2>排班管理</h2>
+<div id="scheduleProgress" style="margin-bottom:14px"></div>
 <div class="grid3"><label>日期<input id="shiftDate" type="date"></label>
 <label>員工<select id="shiftEmployee"></select></label>
 <label>班別<select id="shiftType"><option>全天班</option><option>09:00~14:00</option><option>16:00~20:00</option><option>自訂</option></select></label></div>
 <div class="grid2"><label>自訂班別<input id="shiftCustom" placeholder="例：10:00~15:00"></label><label>預計時數<input id="shiftHours" type="number" step="0.5"></label></div>
-<div id="conflictBox"></div><button id="saveShift" class="primary">新增排班</button>
+<div id="conflictBox"></div>
+<div class="grid2">
+  <button id="saveShift" class="primary">新增排班</button>
+  <button id="finishShiftDay">這天排完，前往下一天</button>
+</div>
 <div style="margin-top:12px">
   <button id="publishSchedule" class="primary">公布所選月份班表並通知全體員工</button>
   <small>公布月份使用下方「排假審核與薪資」所選月份。</small>
