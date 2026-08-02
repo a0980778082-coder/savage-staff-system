@@ -406,6 +406,8 @@ function renderScheduleProgress(rows){
 function renderAdminSchedule(rows){$("adminSchedule").innerHTML=`<div class="table-wrap"><table><tr><th>日期</th><th>員工</th><th>班別</th><th>時數</th><th></th></tr>${rows.map(x=>`<tr><td>${x.date}</td><td>${esc(x.employeeName)}</td><td>${esc(x.timeSlot)}</td><td>${x.plannedHours??""}</td><td><button class="mini red" data-delete-shift="${x.row}">刪除</button></td></tr>`).join("")}</table></div>`}
 function renderAdminLeave(rows){$("adminLeave").innerHTML=`<div class="table-wrap"><table><tr><th>日期</th><th>員工</th><th>排休時段</th><th>狀態</th></tr>${rows.map(x=>`<tr><td>${x.requestDate}</td><td>${esc(x.employeeName)}</td><td>${esc(x.slot)}</td><td><span class="badge">${esc(x.status)}</span></td></tr>`).join("")||`<tr><td colspan="4">所選月份尚無排休資料</td></tr>`}</table></div>`}
 function selectedShiftType(){return $("shiftType").value==="自訂"?$("shiftCustom").value:$("shiftType").value}
+function inferredShiftHours(slot){const s=String(slot||"");if(s.includes("全天"))return 8;const m=s.match(/(\d{1,2}):(\d{2})\s*[~～-]\s*(\d{1,2}):(\d{2})/);return m?((Number(m[3])*60+Number(m[4]))-(Number(m[1])*60+Number(m[2])))/60:0}
+function autoFillShiftHours(force=false){const hours=inferredShiftHours(selectedShiftType());if(hours&&(!$("shiftHours").value||force))$("shiftHours").value=hours}
 async function checkConflict(){if(!$("shiftDate").value||!$("shiftEmployee").value||!selectedShiftType())return;try{const r=await api("checkScheduleConflict",{date:$("shiftDate").value,employee:$("shiftEmployee").value,timeSlot:selectedShiftType()});$("conflictBox").innerHTML=r.conflict?`<div class="warning">⚠️ ${esc(r.message)}</div>`:`<div class="safe">此日期目前沒有排假衝突</div>`;return r.conflict}catch(e){toast(e.message)}}
 async function saveShift(){try{if(await checkConflict())throw Error("這個班別和排休時段衝突，已阻止誤排班");const type=selectedShiftType();await api("saveShift",{date:$("shiftDate").value,employee:$("shiftEmployee").value,timeSlot:type,hours:$("shiftHours").value});toast("排班已新增");await loadAdmin();await refresh()}catch(e){toast(e.message)}}
 async function finishShiftDay(){
@@ -452,6 +454,6 @@ $("loginBtn").onclick=login;$("logoutBtn").onclick=logout;$("offSubmit").onclick
 $("adminLoad").onclick=loadAdmin;$("saveShift").onclick=saveShift;$("saveEmployee").onclick=saveEmployee;$("saveSettings").onclick=saveSettings;$("publishSchedule").onclick=publishSchedule;$("exportPayroll").onclick=exportPayroll;
 $("finishShiftDay").onclick=finishShiftDay;
 $("adminMonth").onchange=()=>{const month=$("adminMonth").value,p=getScheduleProgress([],month);if(p.next)$("shiftDate").value=p.next;loadAdmin()};
-$("shiftDate").onchange=checkConflict;$("shiftEmployee").onchange=checkConflict;$("oilPhoto").onchange=e=>{$("oilPreview").innerHTML=e.target.files[0]?`<img class="photo" src="${URL.createObjectURL(e.target.files[0])}">`:""};
+$("shiftDate").onchange=checkConflict;$("shiftEmployee").onchange=checkConflict;$("shiftType").onchange=()=>{autoFillShiftHours(true);checkConflict()};$("shiftCustom").oninput=()=>{if($("shiftType").value==="自訂")autoFillShiftHours(true)};$("oilPhoto").onchange=e=>{$("oilPreview").innerHTML=e.target.files[0]?`<img class="photo" src="${URL.createObjectURL(e.target.files[0])}">`:""};
 boot().catch(e=>toast(e.message));
 })();
