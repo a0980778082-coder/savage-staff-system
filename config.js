@@ -1,1 +1,0 @@
-window.SAVAGE_CONFIG={API_URL:"https://script.google.com/macros/s/AKfycbzbKd4NFaC9_ZsQ0GKYtGU8c3sd3uAp4BMipyX-5BhFYSbbh4S78ubgG_oMLFFU7FWg/exec"};
