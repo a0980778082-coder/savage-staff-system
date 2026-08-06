@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+
+  window.OneSignalDeferred.push(async function (OneSignal) {
+    OneSignal.Debug.setLogLevel("trace");
+
+    await OneSignal.init({
+      appId: "85f48a6b-7c6b-4013-a74d-aa59d3f94a4f",
+      serviceWorkerPath: "OneSignalSDKWorker.js",
+      serviceWorkerParam: {
+        scope: "/savage-staff-system/"
+      },
+      notifyButton: {
+        enable: true
+      }
+    });
+
+    console.log("OneSignal 初始化完成");
+  });
+</script>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#89c8d3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="小野人員工系統">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>小野人員工系統</title><link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="shell">
+<section id="loginView" class="card login">
+<div class="brand">小野人餐盒製造所</div><h1>員工排班與薪資系統</h1>
+<label>姓名<select id="loginName"></select></label>
+<label>密碼<input id="loginPin" type="password" inputmode="numeric"></label>
+<button id="loginBtn" class="primary">登入</button><p id="loginMsg" class="danger"></p>
+</section>
+
+<section id="appView" hidden>
+<header class="top"><div><b id="hello"></b><small id="todayText"></small></div><button id="logoutBtn">登出</button></header>
+<nav id="tabs" class="tabs">
+<button data-page="today" class="active">今日</button><button data-page="month">月班表</button>
+<button data-page="off">排假</button><button data-page="substitute">代班</button><button data-page="oil">里程</button>
+<button data-page="salary">薪資</button><button data-page="admin" id="adminTab" hidden>老闆後台</button>
+</nav>
+<section id="page-today" class="page active"></section>
+<section id="page-month" class="page"></section>
+
+<section id="page-off" class="page">
+<div class="card"><h2>申請排假</h2>
+<label>日期<input id="offDate" type="date"></label>
+<label>時段<select id="offSlot"><option>全天排休</option><option>上午排休</option><option>下午排休</option><option>晚班排休</option></select></label>
+<label>備註<input id="offNote"></label><button id="offSubmit" class="primary">送出申請</button></div>
+<div id="offList"></div></section>
+
+
+<section id="page-substitute" class="page">
+<div class="card"><h2>申請代班</h2>
+<label>選擇我的班<select id="subShift"></select></label>
+<label>指定代班員工<select id="subEmployee"><option value="">公開徵求代班</option></select></label>
+<label>原因或備註<input id="subNote" placeholder="例：臨時有事、照顧小孩"></label>
+<button id="subSubmit" class="primary">送出代班申請</button>
+<small>指定員工接受後，仍需老闆核准；公開徵求則由其他員工主動接班。</small></div>
+<div class="card"><h2>可接的代班</h2><div id="subAvailable"></div></div>
+<div class="card"><h2>我的代班紀錄</h2><div id="subList"></div></div>
+</section>
+
+<section id="page-oil" class="page">
+<div class="card"><h2>機車里程補貼</h2>
+<label>日期<input id="oilDate" type="date"></label>
+<div class="grid2"><label>出發前里程<input id="oilStart" type="number" step="0.1"></label>
+<label>回店里程<input id="oilEnd" type="number" step="0.1"></label></div>
+<label>照片佐證<input id="oilPhoto" type="file" accept="image/*" capture="environment"></label>
+<label>備註<input id="oilNote" placeholder="例：漢神洲際外送"></label>
+<div id="oilPreview"></div><button id="oilSubmit" class="primary">送出里程</button>
+<small>補貼使用老闆後台設定的油價與油耗自動計算。</small></div><div id="oilList"></div></section>
+
+<section id="page-salary" class="page">
+<div class="card"><h2>我的薪資</h2><label>月份<input id="salaryMonth" type="month"></label>
+<button id="salaryLoad" class="primary">查詢</button></div><div id="salaryResult"></div></section>
+
+<section id="page-admin" class="page">
+<div class="admin-grid">
+<div class="card"><h2>員工管理</h2>
+<input id="empEditRow" type="hidden">
+<label>姓名<input id="empName"></label>
+<div class="grid2"><label>登入密碼<input id="empPin"></label><label>角色<select id="empRole"><option value="staff">員工</option><option value="admin">管理者</option></select></label></div>
+<div class="grid2"><label>薪資類型<select id="empSalaryType"><option>時薪</option><option>月薪</option></select></label><label>員工編號<input id="empId"></label></div>
+<div class="grid2"><label>月薪<input id="empMonthly" type="number"></label><label>時薪<input id="empHourly" type="number"></label></div>
+<button id="saveEmployee" class="primary">儲存員工</button><div id="employeeList"></div></div>
+
+<div class="card"><h2>油資設定</h2>
+<label>目前油價（元／公升）<input id="settingOilPrice" type="number" step="0.1"></label>
+<label>每公升公里數<input id="settingEfficiency" type="number" step="0.1"></label>
+<button id="saveSettings" class="primary">儲存設定</button></div>
+</div>
+
+<div class="card"><h2>排班管理</h2>
+<div id="scheduleProgress" style="margin-bottom:14px"></div>
+<div class="grid3"><label>日期<input id="shiftDate" type="date"></label>
+<label>員工<select id="shiftEmployee"></select></label>
+<label>班別<select id="shiftType"><option>全天班</option><option>09:00~13:00</option><option>09:00~14:00</option><option>10:00~14:00</option><option>16:00~20:00</option><option>自訂</option></select></label></div>
+<div class="grid2"><label>自訂班別<input id="shiftCustom" placeholder="例：10:00~15:00"></label><label>預計時數<input id="shiftHours" type="number" step="0.5"></label></div>
+<div id="conflictBox"></div>
+<div class="grid2">
+  <button id="saveShift" class="primary">新增排班</button>
+  <button id="finishShiftDay">這天排完，前往下一天</button>
+</div>
+<div style="margin-top:12px">
+  <button id="publishSchedule" class="primary">公布所選月份班表並通知全體員工</button>
+  <small>公布月份使用下方「排假審核與薪資」所選月份。</small>
+</div>
+<div id="adminSchedule"></div></div>
+
+<div class="card"><h2>排休紀錄</h2>
+<small>排休資料獨立顯示，班次資料不會再混入這裡。</small>
+<div id="adminLeave"></div></div>
+
+<div class="card"><h2>代班審核</h2><div id="adminSubstitute"></div></div>
+<div class="card"><h2>排假審核與薪資</h2><label>月份<input id="adminMonth" type="month"></label>
+<div class="grid2"><button id="adminLoad" class="primary">載入後台</button><button id="exportPayroll">匯出薪資 CSV</button></div>
+<div id="adminResult"></div></div>
+</section>
+</section>
+</main>
+<div id="toast" class="toast" hidden></div>
+<div id="statusModal" class="status-modal" hidden>
+  <div class="status-box">
+    <div id="statusSpinner" class="spinner"></div>
+    <div id="statusIcon" class="status-icon" hidden></div>
+    <h3 id="statusTitle">登入中</h3>
+    <p id="statusMessage">正在確認帳號資料，請稍候…</p>
+  </div>
+</div>
+<script src="config.js"></script><script src="app.js"></script>
+</body></html>
