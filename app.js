@@ -4,10 +4,11 @@ const $=id=>document.getElementById(id),cfg=window.SAVAGE_CONFIG;
 let token=localStorage.getItem("savage_token")||"",me=null,data=null,employees=[];
 const esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=x=>"$"+Math.round(Number(x||0)).toLocaleString("zh-TW");
-const today=()=>new Date().toISOString().slice(0,10),ym=()=>today().slice(0,7);
+const taipeiDate=d=>new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Taipei",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);
+const today=()=>taipeiDate(new Date()),ym=()=>today().slice(0,7);
 const daysInMonth=month=>{const [y,m]=String(month).split("-").map(Number);return y&&m?new Date(y,m,0).getDate():0};
 const progressKey=month=>`savage_schedule_progress_${month}`;
-function nextDate(date){const d=new Date(`${date}T12:00:00`);d.setDate(d.getDate()+1);return d.toISOString().slice(0,10)}
+function nextDate(date){const [y,m,d]=String(date).split("-").map(Number);const n=new Date(Date.UTC(y,m-1,d+1));return n.toISOString().slice(0,10)}
 function toast(t){$("toast").textContent=t;$("toast").hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>$("toast").hidden=true,3000)}
 function showStatus(type,title,message){
   const modal=$("statusModal"),spinner=$("statusSpinner"),icon=$("statusIcon");
