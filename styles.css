@@ -1,0 +1,126 @@
+:root{--brand:#82c6d1;--brand-dark:#286c76;--ink:#17343b;--muted:#6a7d82;--surface:#fff;--bg:#f2f7f8;--line:#dbe7e9;--danger:#c94141;--shadow:0 12px 36px rgba(20,64,72,.09);font-family:'Noto Sans TC',system-ui,sans-serif;color:var(--ink);background:var(--bg)}*{box-sizing:border-box}body{margin:0;background:var(--bg);padding-bottom:104px}.hero{background:linear-gradient(145deg,#dff2f5,#b8e0e7);padding:28px 18px 34px}.hero-inner{max-width:760px;margin:auto;display:flex;align-items:center;gap:18px}.brand-mark{width:82px;height:82px;border:3px solid rgba(40,108,118,.25);border-radius:22px;display:grid;place-items:center;font-weight:800;font-size:20px;color:var(--brand-dark);background:rgba(255,255,255,.55)}.eyebrow{margin:0 0 4px;color:var(--brand-dark);font-weight:700;letter-spacing:.08em}.hero h1{font-size:clamp(28px,7vw,42px);margin:0;line-height:1.15}.hero-copy{margin:8px 0 0;color:#47727a}.page-shell{max-width:760px;margin:-14px auto 0;padding:0 14px 28px;display:grid;gap:16px}.panel{background:var(--surface);border-radius:22px;padding:20px;box-shadow:var(--shadow)}.section-heading{display:flex;gap:12px;align-items:flex-start;margin-bottom:18px}.section-heading h2{font-size:21px;margin:0}.section-heading p{margin:3px 0 0;color:var(--muted);font-size:14px}.step{flex:0 0 34px;height:34px;border-radius:12px;background:var(--brand);display:grid;place-items:center;font-weight:800;color:#fff}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:grid;gap:7px}.field span,.choice-fieldset legend{font-weight:700;font-size:14px}.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:13px;background:#fff;padding:13px 14px;font:inherit;color:var(--ink);outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--brand-dark);box-shadow:0 0 0 3px rgba(130,198,209,.22)}.field.full{margin-top:16px}.choice-fieldset{border:0;padding:0;margin:18px 0 0}.segmented,.choice-cards{display:grid;gap:8px;margin-top:9px}.segmented{grid-template-columns:1fr 1fr}.choice-cards.three{grid-template-columns:repeat(3,1fr)}.segmented input,.choice-cards input{position:absolute;opacity:0;pointer-events:none}.segmented span,.choice-cards span{display:grid;place-items:center;min-height:46px;border:1px solid var(--line);border-radius:13px;font-weight:700;background:#fff}.segmented input:checked+span,.choice-cards input:checked+span{border-color:var(--brand-dark);background:#e0f3f6;color:var(--brand-dark)}.loading-card{padding:26px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:16px}.spinner{display:inline-block;width:18px;height:18px;border:3px solid #d5e9ec;border-top-color:var(--brand-dark);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-4px;margin-right:8px}@keyframes spin{to{transform:rotate(360deg)}}.menu-root{display:grid;gap:12px}.menu-category{border:1px solid var(--line);border-radius:17px;overflow:hidden}.category-button{width:100%;border:0;background:#f8fbfc;padding:16px;display:flex;justify-content:space-between;align-items:center;font:inherit;font-weight:800;color:var(--ink);cursor:pointer}.category-count{font-size:12px;color:var(--brand-dark);background:#dff2f5;padding:5px 9px;border-radius:999px}.category-items{padding:8px 12px 12px;display:grid;gap:10px}.menu-item{border-top:1px solid #edf3f4;padding:13px 2px 4px}.menu-item:first-child{border-top:0}.item-main{display:flex;align-items:center;justify-content:space-between;gap:10px}.item-name{font-weight:700}.item-price{font-weight:800;color:var(--brand-dark);margin-top:3px}.stock-note{font-size:12px;color:var(--danger);margin-top:3px}.qty-control{display:flex;align-items:center;gap:10px}.qty-control button{width:39px;height:39px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:23px;color:var(--brand-dark);cursor:pointer}.qty-value{min-width:22px;text-align:center;font-weight:800}.custom-options{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px;padding:12px;border-radius:13px;background:#f3f8f9}.custom-options label{font-size:12px;font-weight:700}.custom-options select{width:100%;margin-top:5px;border:1px solid var(--line);border-radius:10px;padding:9px;background:#fff}.payment-box{margin-top:12px;background:#f2f8f9;border-radius:14px;padding:16px}.payment-box img{display:block;width:min(240px,80%);margin:14px auto;border-radius:10px}.payment-box dl{margin:10px 0 0}.payment-box dl div{display:flex;justify-content:space-between;border-top:1px solid var(--line);padding:9px 0}.payment-box dt{color:var(--muted)}.payment-box dd{margin:0;font-weight:700}.bottom-bar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:12px max(14px,env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));display:flex;align-items:center;justify-content:space-between;gap:14px}.bottom-bar>div{display:grid}.bottom-bar small{color:var(--muted)}.total-price{font-size:25px}.primary-button{border:0;border-radius:14px;background:var(--brand-dark);color:#fff;font:inherit;font-weight:800;padding:14px 22px;cursor:pointer}.primary-button:disabled{opacity:.45;cursor:not-allowed}.toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);background:#17343b;color:#fff;padding:12px 16px;border-radius:12px;z-index:40;max-width:calc(100% - 28px);box-shadow:var(--shadow)}.success-dialog{border:0;border-radius:22px;padding:30px;max-width:360px;width:calc(100% - 28px);text-align:center;box-shadow:0 20px 80px rgba(0,0,0,.2)}.success-dialog::backdrop{background:rgba(16,42,48,.55)}.success-icon{margin:auto;width:64px;height:64px;border-radius:50%;background:#dff2f5;color:var(--brand-dark);display:grid;place-items:center;font-size:34px;font-weight:800}.success-dialog h2{margin-bottom:8px}@media(max-width:620px){.hero{padding-top:22px}.brand-mark{width:68px;height:68px}.panel{padding:17px}.form-grid{grid-template-columns:1fr}.choice-cards.three{grid-template-columns:1fr 1fr 1fr}.custom-options{grid-template-columns:1fr}.bottom-bar .primary-button{min-width:145px}.page-shell{padding-left:10px;padding-right:10px}}@media(max-width:410px){.choice-cards.three{grid-template-columns:1fr}.hero-inner{align-items:flex-start}.brand-mark{flex-basis:68px}.bottom-bar{gap:8px}.bottom-bar .primary-button{min-width:130px;padding:13px 15px}}
+
+/* 配菜許願池與好運輪盤 */
+.wish-panel{background:linear-gradient(180deg,#fff,#fbf7ef)}
+.wish-note{margin:10px 0 0;color:#8a6b35;font-size:13px;line-height:1.65}
+.reward-panel{background:linear-gradient(135deg,#17343b,#286c76);color:#fff}
+.reward-copy{display:flex;gap:14px;align-items:center}.reward-copy h2{margin:0;font-size:22px}.reward-copy p{margin:4px 0 0;color:#d8eef1;font-size:14px}.reward-emoji{font-size:42px}.reward-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}.reward-tags span{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);padding:7px 12px;border-radius:999px;font-weight:700}.reward-rule{margin:12px 0 0;color:#cde3e7;font-size:12px}.coupon-field small{color:var(--muted);font-size:12px}.reward-progress{margin:16px 0;padding:14px;border-radius:15px;background:#f3f8f9}.reward-progress p{margin:5px 0 12px;color:var(--muted)}.spin-button{border:0;border-radius:14px;background:linear-gradient(135deg,#ffb84d,#f28b2f);color:#fff;font:inherit;font-weight:800;padding:13px 18px;cursor:pointer;box-shadow:0 8px 20px rgba(242,139,47,.25)}.spin-button:disabled{opacity:.55}.wheel-dialog{border:0;border-radius:24px;width:min(420px,calc(100% - 24px));padding:24px;text-align:center;box-shadow:0 25px 90px rgba(0,0,0,.25)}.wheel-dialog::backdrop{background:rgba(16,42,48,.62)}.wheel-dialog h2{margin:0 0 4px}.wheel-dialog>p{margin:0 0 16px;color:var(--muted)}.dialog-close{position:absolute;right:13px;top:10px;border:0;background:transparent;font-size:28px;color:var(--muted);cursor:pointer}.wheel-stage{position:relative;width:280px;height:280px;margin:10px auto 22px}.wheel-pointer{position:absolute;z-index:3;left:50%;top:-18px;transform:translateX(-50%);font-size:34px;color:#c94141;text-shadow:0 2px 4px rgba(0,0,0,.15)}.prize-wheel{width:100%;height:100%;border-radius:50%;border:10px solid #fff;box-shadow:0 0 0 5px #286c76,0 14px 38px rgba(0,0,0,.18);position:relative;background:conic-gradient(#ffcf6b 0 90deg,#82c6d1 90deg 180deg,#d8dde0 180deg 270deg,#d8dde0 270deg 360deg);transition:transform 4.2s cubic-bezier(.12,.72,.08,1)}.prize-wheel::after{content:'小野人';position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%);width:76px;height:76px;border-radius:50%;display:grid;place-items:center;background:#fff;color:var(--brand-dark);font-weight:900;box-shadow:0 5px 18px rgba(0,0,0,.14)}.wheel-label{position:absolute;font-size:12px;font-weight:900;color:#17343b;width:80px;text-align:center}.label-a{top:23px;left:99px}.label-b{top:116px;right:7px;transform:rotate(90deg)}.label-c{bottom:24px;left:99px;transform:rotate(180deg)}.label-d{top:116px;left:7px;transform:rotate(-90deg)}.spin-result{margin-top:18px;padding:16px;border-radius:16px;background:#fff8e8}.spin-result p{margin:0;color:var(--muted)}.spin-result strong{display:block;font-size:26px;color:#c56b12;margin:5px 0}.coupon-code{font-size:22px;font-weight:900;letter-spacing:.08em;background:#fff;border:2px dashed #f0a13e;border-radius:12px;padding:10px;margin:10px 0}.spin-result small{color:var(--muted);line-height:1.55}@media(max-width:390px){.wheel-stage{width:245px;height:245px}.label-a,.label-c{left:82px}.label-b{top:100px}.label-d{top:100px}}
+
+
+/* V1.3 餐點分類快速下拉與摺疊選單 */
+.category-jump{display:grid;gap:7px;margin:0 0 14px;padding:14px;border:1px solid var(--line);border-radius:15px;background:#f5fafb}.category-jump>span{font-weight:800}.category-jump select{width:100%;border:1px solid var(--brand);border-radius:13px;background:#fff;padding:13px 42px 13px 14px;font:inherit;font-weight:700;color:var(--ink);outline:none}.category-jump select:focus{border-color:var(--brand-dark);box-shadow:0 0 0 3px rgba(130,198,209,.22)}.category-jump small{color:var(--muted);line-height:1.55}.menu-category{scroll-margin-top:14px}.category-meta{display:flex;align-items:center;gap:9px}.category-chevron{font-size:22px;line-height:1;transition:transform .2s ease;color:var(--brand-dark)}.category-button[aria-expanded="true"] .category-chevron{transform:rotate(180deg)}.category-button[aria-expanded="true"]{background:#e8f5f7;color:var(--brand-dark)}.category-items[hidden]{display:none!important}
+
+
+/* V1.5 記住上次配送資料 */
+.delivery-memory{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:15px;padding:13px 14px;border:1px solid var(--line);border-radius:14px;background:#f5fafb}.remember-choice{display:flex;align-items:flex-start;gap:10px;cursor:pointer}.remember-choice input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--brand-dark);flex:0 0 auto}.remember-choice span{display:grid;gap:3px}.remember-choice strong{font-size:14px}.remember-choice small{color:var(--muted);font-size:12px;line-height:1.5}.text-button{border:0;background:transparent;color:var(--brand-dark);font:inherit;font-size:13px;font-weight:800;padding:8px;white-space:nowrap;cursor:pointer}@media(max-width:520px){.delivery-memory{align-items:flex-start}.text-button{padding-top:2px}}
+
+
+/* V1.6 送單防重複與明確提示 */
+.submit-overlay{position:fixed;inset:0;z-index:100;background:rgba(16,42,48,.68);display:grid;place-items:center;padding:20px;backdrop-filter:blur(4px)}
+.submit-overlay[hidden]{display:none!important}.submit-overlay-card{width:min(360px,100%);background:#fff;border-radius:24px;padding:30px 24px;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.28)}
+.submit-overlay-card h2{margin:16px 0 7px;font-size:24px}.submit-overlay-card p{margin:0;color:var(--ink);font-weight:800;line-height:1.6}.submit-overlay-card small{display:block;margin-top:10px;color:var(--muted)}
+.submit-loader{width:64px;height:64px;margin:auto;border:7px solid #dceff2;border-top-color:var(--brand-dark);border-radius:50%;animation:spin .85s linear infinite}
+body.is-submitting{overflow:hidden}.success-dialog[open]{animation:successPop .24s ease-out}@keyframes successPop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+
+.order-fail-dialog .fail-icon{background:#fde6e3;color:#b63838}.order-fail-dialog .primary-button{background:#a93333}
+
+
+/* v35 */
+.menu-item.sold-out{opacity:.58;background:#f3f5f5}.menu-item.sold-out .qty-control button{cursor:not-allowed;background:#d9e0e2;color:#88989b}.sold-out-badge{display:inline-block;margin-left:7px;padding:3px 8px;border-radius:999px;background:#b6453c;color:#fff;font-size:12px;font-weight:800}.edit-banner{position:sticky;top:8px;z-index:30;margin:12px 0;padding:14px 16px;border-radius:16px;background:#fff0c9;border:2px solid #e0a92f;font-weight:800;box-shadow:0 6px 20px #0002}
+
+.delivery-date-field{grid-column:1/-1}
+.delivery-date-field input{font-size:1.05rem;font-weight:700}
+.delivery-date-field small{display:block;margin-top:.4rem;color:#b45309;font-weight:700}
+.success-date{padding:.65rem .8rem;border-radius:12px;background:#fff7ed;color:#9a3412}
+
+
+/* v37.1 LINE Pay 後三碼核對 */
+.linepay-box{display:grid;gap:14px}
+.linepay-warning{background:#fff2dc;border:2px solid #efb24b;border-radius:18px;padding:15px 16px;color:#5f4218;line-height:1.65}
+.linepay-warning b{display:block;font-size:18px;margin-bottom:5px}
+.linepay-warning ol{margin:6px 0 6px 22px;padding:0}
+.linepay-warning p{margin:6px 0 0}
+.linepay-warning strong{font-size:20px;color:#b25a00}
+.linepay-last3-field{margin-top:2px}
+.linepay-last3-field span{display:flex;align-items:center;gap:8px}
+.linepay-last3-field em{font-style:normal;background:#b83c31;color:#fff;border-radius:999px;padding:3px 8px;font-size:12px}
+.linepay-last3-field input{font-size:24px;font-weight:900;letter-spacing:.28em;text-align:center}
+.linepay-confirm-check{display:flex;align-items:flex-start;gap:10px;background:#edf6f7;border-radius:14px;padding:13px 14px;font-weight:800;line-height:1.5}
+.linepay-confirm-check input{width:22px;height:22px;flex:0 0 auto;margin-top:1px}
+.success-linepay-notice{background:#fff2dc;border:2px solid #efb24b;border-radius:16px;padding:13px 14px;margin:12px 0;color:#5f4218}
+.success-linepay-notice p{margin:5px 0 0}
+.success-linepay-notice b{font-size:22px;color:#b25a00}
+
+
+/* v37.2 營業狀態與公告 */
+.site-marquee{
+  position:sticky;top:0;z-index:80;overflow:hidden;
+  background:#b94b3e;color:#fff;border-bottom:1px solid rgba(255,255,255,.28);
+  min-height:42px;display:flex;align-items:center
+}
+.site-marquee[hidden]{display:none!important}
+.marquee-track{width:100%;overflow:hidden;white-space:nowrap}
+.marquee-track span{
+  display:inline-block;padding-left:100%;font-weight:900;font-size:16px;
+  animation:savage-marquee 16s linear infinite
+}
+@keyframes savage-marquee{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+.business-status-banner{
+  margin:0 0 16px;padding:16px 18px;border-radius:18px;
+  background:#fff1d8;border:2px solid #efb34d;color:#674717;
+  box-shadow:0 10px 24px rgba(80,58,20,.08)
+}
+.business-status-banner[hidden]{display:none!important}
+.business-status-banner.closed{background:#ffebe8;border-color:#d66a5e;color:#762d25}
+.business-status-banner strong{display:block;font-size:21px;margin-bottom:5px}
+.business-status-banner p{margin:0;line-height:1.65;font-weight:700}
+.announcement-dialog{
+  width:min(92vw,480px);border:0;border-radius:24px;padding:25px;
+  color:#15363d;box-shadow:0 24px 70px rgba(11,39,44,.28)
+}
+.announcement-dialog::backdrop{background:rgba(14,37,42,.58);backdrop-filter:blur(3px)}
+.announcement-icon{font-size:42px;text-align:center}
+.announcement-dialog h2{text-align:center;margin:7px 0 10px;font-size:27px}
+.announcement-dialog p{white-space:pre-wrap;line-height:1.75;font-size:17px;margin:0 0 18px}
+.primary-button.ordering-closed{background:#8b9698!important;cursor:not-allowed}
+@media(max-width:640px){
+  .marquee-track span{font-size:15px}
+  .business-status-banner{margin-left:0;margin-right:0}
+}
+
+
+/* v37.4 同品項多份餐盒可分別設定飯量 */
+.portion-options{display:block!important;margin-top:12px;padding:13px;background:#f3f8f9;border:1px solid #d8e7e9;border-radius:16px}
+.portion-options[hidden]{display:none!important}
+.portion-options-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.portion-options-head strong{display:block;font-size:16px}
+.portion-options-head small{display:block;margin-top:2px;color:#6c8186;line-height:1.4}
+.apply-all-rice{border:1px solid #85bcc5;background:#fff;color:#27616b;border-radius:11px;padding:8px 10px;font-weight:850;white-space:nowrap}
+.portion-list{display:grid;gap:9px}
+.portion-row{display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;align-items:end;background:#fff;border:1px solid #dce9eb;border-radius:13px;padding:10px}
+.portion-number{font-weight:950;color:#2b6973;padding:0 5px 10px 1px;white-space:nowrap}
+.portion-row label{display:grid;gap:4px}
+.portion-row label span{font-size:12px;font-weight:850;color:#657b80}
+.portion-row select{width:100%;min-height:42px;border:1px solid #ccdfe2;border-radius:10px;background:#fff;padding:8px;font:inherit;color:#17363d}
+@media(max-width:640px){
+  .portion-options-head{align-items:flex-start;flex-direction:column}
+  .apply-all-rice{width:100%;min-height:42px}
+  .portion-row{grid-template-columns:1fr 1fr}
+  .portion-number{grid-column:1/-1;padding-bottom:0}
+}
+
+
+/* v37.5 LINE 身分驗證 */
+.line-auth-panel{display:flex;align-items:center;gap:12px;margin:0 0 16px;padding:15px 18px;border:1px solid #d7e7e9;border-radius:18px;background:#fff;box-shadow:0 8px 22px rgba(23,54,61,.06)}
+.line-auth-copy{display:grid;gap:3px;flex:1}.line-auth-copy strong{font-size:17px}.line-auth-copy span{font-size:13px;color:#647b80;line-height:1.5}
+.line-auth-panel.verified{border-color:#78d6a1;background:#f2fff7}.line-auth-panel.verified .line-auth-copy span{color:#197443;font-weight:800}
+.line-login-button{border:0;border-radius:12px;background:#06c755;color:#fff;padding:11px 16px;font:inherit;font-weight:900;cursor:pointer;white-space:nowrap}
+@media(max-width:640px){.line-auth-panel{align-items:stretch;flex-direction:column}.line-login-button{width:100%;min-height:46px}}
+
+
+/* v37.7 百元外送餐盒／餐盒加購優惠防呆 */
+.addon-rule-note{margin:10px 12px 4px;padding:11px 13px;border-radius:12px;background:#fff4d8;border:1px solid #efc56b;color:#755414;font-weight:800;line-height:1.5}
+.menu-category.addon-disabled .category-button{opacity:.82}
+.menu-category.addon-disabled .menu-item{opacity:.66}
+.menu-category.addon-disabled [data-action="plus"]{cursor:not-allowed;opacity:.45}
+.menu-category.addon-disabled .addon-rule-note{background:#fff0ed;border-color:#efb5aa;color:#8a352a}
