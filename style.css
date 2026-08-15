@@ -1,8 +1,8 @@
 :root{--brand:#89c8d3;--ink:#172026;--muted:#66757d;--bg:#f3f7f8;--danger:#b83b3b;--ok:#19734d}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Microsoft JhengHei",system-ui,sans-serif}
-button,input,select{font:inherit}.shell{max-width:1050px;margin:auto;padding:14px 12px 90px}.card{background:#fff;border-radius:18px;padding:18px;margin:12px 0;box-shadow:0 5px 18px #0000000e}
+button,input,select,textarea{font:inherit}.shell{max-width:1050px;margin:auto;padding:14px 12px 90px}.card{background:#fff;border-radius:18px;padding:18px;margin:12px 0;box-shadow:0 5px 18px #0000000e}
 .login{max-width:420px;margin:8vh auto}.brand{font-weight:900;color:#37747e}h1{font-size:24px}h2{font-size:19px;margin:0 0 14px}
-label{display:block;font-weight:700;margin:10px 0}input,select{width:100%;padding:12px;border:1px solid #cfdcdf;border-radius:11px;background:#fff;margin-top:5px}
+label{display:block;font-weight:700;margin:10px 0}input,select,textarea{width:100%;padding:12px;border:1px solid #cfdcdf;border-radius:11px;background:#fff;margin-top:5px}textarea{resize:vertical;line-height:1.6}
 button{border:0;border-radius:11px;padding:11px 14px;font-weight:800;cursor:pointer}.primary{width:100%;background:var(--brand);color:#10252a}
 .top{display:flex;justify-content:space-between;align-items:center}.top small{display:block;color:var(--muted)}
 .tabs{position:sticky;top:0;z-index:5;display:flex;gap:6px;overflow:auto;background:var(--bg);padding:8px 0}.tabs button{white-space:nowrap}.tabs .active{background:var(--ink);color:#fff}
@@ -79,3 +79,30 @@ button{border:0;border-radius:11px;padding:11px 14px;font-weight:800;cursor:poin
     text-align:center;
   }
 }
+
+/* ===== 員工公告 / 禁止排休 ===== */
+.staff-marquee{display:flex;align-items:center;gap:10px;background:#fff7d6;border:1px solid #f0d979;border-radius:14px;padding:9px 11px;margin:8px 0 4px;overflow:hidden;box-shadow:0 3px 12px #00000008}
+.staff-marquee[hidden]{display:none}
+.staff-marquee-label{flex:0 0 auto;font-size:13px;font-weight:900;color:#7a5b00;white-space:nowrap}
+.staff-marquee-window{min-width:0;flex:1;overflow:hidden;white-space:nowrap}
+.staff-marquee-text{display:inline-block;min-width:100%;padding-left:100%;font-weight:900;color:#6e4f00;animation:staffMarquee 18s linear infinite}
+@keyframes staffMarquee{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+
+.notice-modal{position:fixed;inset:0;z-index:1100;display:grid;place-items:center;background:#10252a99;backdrop-filter:blur(4px);padding:18px}
+.notice-modal[hidden]{display:none}
+.notice-modal-box{width:min(92vw,430px);max-height:82vh;overflow:auto;background:#fff;border-radius:24px;padding:24px 20px;text-align:center;box-shadow:0 20px 70px #0005;border-top:7px solid var(--brand)}
+.notice-modal-icon{font-size:38px}
+.notice-modal-box h2{font-size:23px;margin:8px 0 12px}
+.notice-modal-body{text-align:left;line-height:1.8;white-space:pre-wrap;background:#f7fbfc;border-radius:14px;padding:14px;margin-bottom:12px}
+.notice-blocked{text-align:left;background:#fff1f1;border:1px solid #efb6b6;color:#8d2020;border-radius:13px;padding:12px;margin:12px 0;font-weight:800;line-height:1.7}
+.notice-blocked[hidden]{display:none}
+.blocked-date-list{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.blocked-date-chip{display:inline-block;background:#ffe4e4;color:#8d2020;border-radius:999px;padding:5px 9px;font-size:13px;font-weight:900}
+.checkline{display:flex;align-items:center;gap:9px;background:#f7fbfc;padding:10px 12px;border-radius:12px}
+.checkline input{width:auto;margin:0;transform:scale(1.2)}
+.notice-admin-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
+.notice-admin-actions button{width:100%}
+.notice-admin-card textarea{min-height:70px}
+#offRestrictionNotice .restriction-card{background:#fff7d6;border:1px solid #f0d979;color:#6e4f00;border-radius:12px;padding:11px;margin-bottom:10px;line-height:1.6}
+#offRestrictionNotice .restriction-card strong{display:block;margin-bottom:5px}
+@media(max-width:720px){.notice-admin-actions{grid-template-columns:1fr}.staff-marquee{border-radius:12px}.staff-marquee-label{font-size:12px}.notice-modal-box{padding:20px 16px}}

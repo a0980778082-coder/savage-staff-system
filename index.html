@@ -28,7 +28,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="小野人員工系統">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>小野人員工系統</title><link rel="stylesheet" href="style.css?v=20260806-2">
+<title>小野人員工系統</title><link rel="stylesheet" href="style.css?v=20260815-1">
 </head>
 <body>
 <main class="shell">
@@ -41,6 +41,10 @@
 
 <section id="appView" hidden>
 <header class="top"><div><b id="hello"></b><small id="todayText"></small></div><button id="logoutBtn">登出</button></header>
+<div id="staffMarquee" class="staff-marquee" hidden>
+  <div class="staff-marquee-label">📢 員工公告</div>
+  <div class="staff-marquee-window"><div id="staffMarqueeText" class="staff-marquee-text"></div></div>
+</div>
 <nav id="tabs" class="tabs">
 <button data-page="today" class="active">今日</button><button data-page="month">月班表</button>
 <button data-page="off">排假</button><button data-page="substitute">代班</button><button data-page="oil">里程</button>
@@ -51,7 +55,9 @@
 
 <section id="page-off" class="page">
 <div class="card"><h2>申請排假</h2>
+<div id="offRestrictionNotice"></div>
 <label>日期<input id="offDate" type="date"></label>
+<div id="offDateWarning" class="warning" hidden></div>
 <label>時段<select id="offSlot"><option>全天排休</option><option>上午排休</option><option>下午排休</option><option>晚班排休</option></select></label>
 <label>備註<input id="offNote"></label><button id="offSubmit" class="primary">送出申請</button></div>
 <div id="offList"></div></section>
@@ -98,6 +104,29 @@
 <button id="saveSettings" class="primary">儲存設定</button></div>
 </div>
 
+
+<div class="card notice-admin-card">
+  <h2>📢 員工公告＆禁止排休設定</h2>
+  <p class="muted">設定後，員工登入會看到彈窗公告與跑馬燈；禁止排休日期也會直接阻擋排假申請。</p>
+
+  <label class="checkline"><input id="noticePopupEnabled" type="checkbox"> 啟用登入彈窗公告</label>
+  <label>彈窗標題<input id="noticeTitle" placeholder="例：9月份開始排休"></label>
+  <label>彈窗內容<textarea id="noticeBody" rows="4" placeholder="例：9月份排休已開放，請大家於8/20前完成排休登記。"></textarea></label>
+
+  <label class="checkline"><input id="noticeMarqueeEnabled" type="checkbox"> 啟用跑馬燈公告</label>
+  <label>跑馬燈文字<textarea id="noticeMarqueeText" rows="2" placeholder="例：9月份開始排休囉！請於8/20前完成；9/5、9/12禁止排休。"></textarea></label>
+
+  <label>禁止排休日期
+    <textarea id="blockedOffDates" rows="3" placeholder="每個日期用逗號或換行分隔，例如：
+2026-09-05, 2026-09-12"></textarea>
+  </label>
+  <small class="muted">日期格式請使用 YYYY-MM-DD。員工選到這些日期時，送出按鈕會自動鎖住，後端也會再次阻擋。</small>
+  <div class="notice-admin-actions">
+    <button id="saveStaffNotice" class="primary">儲存公告設定</button>
+    <button id="saveAndPushStaffNotice">儲存並推播全體員工</button>
+  </div>
+</div>
+
 <div class="card"><h2>排班管理</h2>
 <div id="scheduleProgress" style="margin-bottom:14px"></div>
 <div class="grid3"><label>日期<input id="shiftDate" type="date"></label>
@@ -127,6 +156,16 @@
 </section>
 </main>
 <div id="toast" class="toast" hidden></div>
+
+<div id="staffNoticeModal" class="notice-modal" hidden>
+  <div class="notice-modal-box">
+    <div class="notice-modal-icon">📢</div>
+    <h2 id="staffNoticeTitle">員工公告</h2>
+    <div id="staffNoticeBody" class="notice-modal-body"></div>
+    <div id="staffNoticeBlocked" class="notice-blocked" hidden></div>
+    <button id="closeStaffNotice" class="primary">我知道了</button>
+  </div>
+</div>
 <div id="statusModal" class="status-modal" hidden>
   <div class="status-box">
     <div id="statusSpinner" class="spinner"></div>
@@ -135,5 +174,5 @@
     <p id="statusMessage">正在確認帳號資料，請稍候…</p>
   </div>
 </div>
-<script src="config.js"></script><script src="app.js?v=20260807-1"></script>
+<script src="config.js"></script><script src="app.js?v=20260815-1"></script>
 </body></html>

@@ -1,7 +1,7 @@
 (()=>{
 "use strict";
 const $=id=>document.getElementById(id),cfg=window.SAVAGE_CONFIG;
-let token=localStorage.getItem("savage_token")||"",me=null,data=null,employees=[];
+let token=localStorage.getItem("savage_token")||"",me=null,data=null,employees=[],noticeShownKey="";
 const esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=x=>"$"+Math.round(Number(x||0)).toLocaleString("zh-TW");
 const taipeiDate=d=>new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Taipei",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);
@@ -175,7 +175,57 @@ async function logout(){
 }
 function showApp(){$("loginView").hidden=true;$("appView").hidden=false;$("hello").textContent=`${me.name}，你好`;$("todayText").textContent=new Date().toLocaleDateString("zh-TW",{dateStyle:"full"});$("adminTab").hidden=me.role!=="admin"}
 async function refresh(month){const r=await api("refresh",{month:month||ym()});me=r.user;data=r;showApp();renderAll()}
-function renderAll(){renderToday();renderMonth();renderOff();renderSubstitute();renderOil();renderSalary(data.salary)}
+function renderAll(){renderStaffNotice();renderToday();renderMonth();renderOff();renderSubstitute();renderOil();renderSalary(data.salary)}
+
+function noticeConfig(){return(data&&data.staffNotice)||{}}
+function blockedOffDates(){return Array.isArray(noticeConfig().blockedOffDates)?noticeConfig().blockedOffDates:[]}
+function formatNoticeDate(d){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(d||"")))return String(d||"");
+  const x=new Date(d+"T00:00:00");
+  const weekday=["日","一","二","三","四","五","六"][x.getDay()];
+  return `${Number(d.slice(5,7))}/${Number(d.slice(8,10))}（${weekday}）`;
+}
+function blockedDatesHtml(dates){return dates.map(d=>`<span class="blocked-date-chip">${esc(formatNoticeDate(d))}</span>`).join("")}
+function renderStaffNotice(){
+  const n=noticeConfig(),dates=blockedOffDates();
+  const marquee=$("staffMarquee"),marqueeText=$("staffMarqueeText");
+  if(marquee&&marqueeText){
+    const show=!!n.marqueeEnabled&&!!String(n.marqueeText||"").trim();
+    marquee.hidden=!show;
+    marqueeText.textContent=show?String(n.marqueeText):"";
+  }
+  const restriction=$("offRestrictionNotice");
+  if(restriction){
+    restriction.innerHTML=dates.length?`<div class="restriction-card"><strong>⚠️ 目前禁止排休日期</strong><div class="blocked-date-list">${blockedDatesHtml(dates)}</div></div>`:"";
+  }
+  validateOffDate();
+  const body=String(n.body||"").trim();
+  const popupKey=`${me?me.name:""}|${n.updatedAt||n.title||body}`;
+  if(n.popupEnabled&&body&&noticeShownKey!==popupKey){
+    noticeShownKey=popupKey;
+    $("staffNoticeTitle").textContent=n.title||"員工公告";
+    $("staffNoticeBody").textContent=body;
+    const blocked=$("staffNoticeBlocked");
+    if(dates.length){
+      blocked.hidden=false;
+      blocked.innerHTML=`<b>🚫 禁止排休日期</b><div class="blocked-date-list">${blockedDatesHtml(dates)}</div>`;
+    }else{
+      blocked.hidden=true;blocked.innerHTML="";
+    }
+    $("staffNoticeModal").hidden=false;
+  }
+}
+function validateOffDate(){
+  const input=$("offDate"),warning=$("offDateWarning"),btn=$("offSubmit");
+  if(!input||!warning||!btn)return false;
+  const d=input.value,blocked=d&&blockedOffDates().includes(d);
+  warning.hidden=!blocked;
+  warning.textContent=blocked?`🚫 ${formatNoticeDate(d)} 為禁止排休日，請選擇其他日期。`:"";
+  btn.disabled=!!blocked;
+  return !!blocked;
+}
+function closeStaffNotice(){if($("staffNoticeModal"))$("staffNoticeModal").hidden=true}
+
 function renderToday(){const rows=data.schedule.filter(x=>x.date===today());$("page-today").innerHTML=`<div class="card"><h2>今天誰上班</h2>${rows.length?rows.map(x=>`<div class="shift"><div class="time">${esc(x.timeSlot)}</div><div><b>${esc(x.employeeName)}</b><div class="muted">${esc(x.status||"已排班")}</div></div></div>`).join(""):"<p>今天尚未排班或店休。</p>"}</div>`}
 function renderMonth(){const rows=data.schedule.filter(x=>x.date.slice(0,7)===ym()),leaves=(data.offRequests||[]).filter(x=>x.employeeName===me.name&&x.requestDate.slice(0,7)===ym()&&x.status==="已核准");const h={};rows.forEach(x=>h[x.employeeName]=(h[x.employeeName]||0)+Number(x.actualHours??x.plannedHours??0));$("page-month").innerHTML=`<div class="card"><h2>本月排班總時數</h2>${Object.entries(h).map(([n,v])=>`<span class="badge">${esc(n)}：${v.toFixed(1)} 小時</span>`).join(" ")||"尚無資料"}</div><div class="card table-wrap"><h2>已排班</h2><table><tr><th>日期</th><th>班別</th><th>員工</th><th>時數</th></tr>${rows.map(x=>`<tr><td>${x.date}</td><td>${esc(x.timeSlot)}</td><td>${esc(x.employeeName)}</td><td>${Number(x.actualHours??x.plannedHours??0)}</td></tr>`).join("")||`<tr><td colspan="4">尚無排班</td></tr>`}</table></div><div class="card table-wrap"><h2>我的已核准排休</h2><table><tr><th>日期</th><th>時段</th><th>狀態</th></tr>${leaves.map(x=>`<tr><td>${x.requestDate}</td><td>${esc(x.slot)}</td><td>${esc(x.status)}</td></tr>`).join("")||`<tr><td colspan="3">本月沒有已核准排休</td></tr>`}</table></div>`}
 function renderOff(){$("offList").innerHTML=data.offRequests.filter(x=>x.employeeName===me.name).map(x=>`<div class="card"><b>${x.requestDate}｜${esc(x.slot)}</b> <span class="badge">${esc(x.status)}</span><div class="muted">${esc(x.note||"")}</div></div>`).join("")}
@@ -213,7 +263,7 @@ function renderSubstitute(){
 
 function renderOil(){$("oilList").innerHTML=data.oilRows.map(x=>`<div class="card"><b>${x.date}｜${x.km} 公里</b> <span class="badge">${money(x.amount)}</span><div class="muted">${esc(x.note||"")}</div>${x.photoUrl?`<a target="_blank" href="${esc(x.photoUrl)}">查看照片</a>`:""}</div>`).join("")}
 function renderSalary(s){if(!s)return;$("salaryResult").innerHTML=`<div class="card"><h2>${s.month} 薪資明細</h2><div class="shift"><div>計薪時數</div><b>${s.hours}</b></div><div class="shift"><div>基本薪資</div><b>${money(s.basePay)}</b></div><div class="shift"><div>獎金</div><b>${money(s.bonuses)}</b></div><div class="shift"><div>里程補貼</div><b>${money(s.oilSubsidy)}</b></div><div class="shift"><div>扣款</div><b>-${money(s.deductions)}</b></div><div class="salary-total"><span>實領</span><span>${money(s.netPay)}</span></div><button id="downloadPayslip" class="primary" style="margin-top:14px">下載 PDF 薪資條</button><small class="muted">薪資條僅能下載本人資料。</small></div>`;$("downloadPayslip").onclick=downloadPayslip}
-async function submitOff(){try{await api("offRequest",{date:$("offDate").value,slot:$("offSlot").value,note:$("offNote").value});toast("排假申請已送出");await refresh()}catch(e){toast(e.message)}}
+async function submitOff(){try{if(validateOffDate())throw Error("這一天設定為禁止排休，請選擇其他日期");await api("offRequest",{date:$("offDate").value,slot:$("offSlot").value,note:$("offNote").value});toast("排假申請已送出");await refresh()}catch(e){toast(e.message)}}
 function toDataUrl(f){return new Promise((res,rej)=>{if(!f)return res("");const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(f)})}
 
 async function submitSubstitute(){
@@ -251,6 +301,14 @@ async function loadAdmin() {
       r.settings && r.settings.efficiency != null
         ? r.settings.efficiency
         : "";
+
+    const notice = r.settings && r.settings.staffNotice ? r.settings.staffNotice : {};
+    $("noticePopupEnabled").checked = !!notice.popupEnabled;
+    $("noticeTitle").value = notice.title || "";
+    $("noticeBody").value = notice.body || "";
+    $("noticeMarqueeEnabled").checked = !!notice.marqueeEnabled;
+    $("noticeMarqueeText").value = notice.marqueeText || "";
+    $("blockedOffDates").value = Array.isArray(notice.blockedOffDates) ? notice.blockedOffDates.join("\n") : "";
 
     $("shiftEmployee").innerHTML = employees
       .filter(x => x.status === "在職")
@@ -424,6 +482,23 @@ async function finishShiftDay(){
 }
 async function saveEmployee(){try{await api("saveEmployee",{row:$("empEditRow").value,name:$("empName").value,pin:$("empPin").value,role:$("empRole").value,salaryType:$("empSalaryType").value,employeeId:$("empId").value,monthly:$("empMonthly").value,hourly:$("empHourly").value});toast("員工資料已儲存");["empEditRow","empName","empPin","empId","empMonthly","empHourly"].forEach(id=>$(id).value="");await loadAdmin()}catch(e){toast(e.message)}}
 async function saveSettings(){try{await api("saveSettings",{oilPrice:$("settingOilPrice").value,efficiency:$("settingEfficiency").value});toast("設定已儲存")}catch(e){toast(e.message)}}
+async function saveStaffNotice(sendPush=false){
+  try{
+    const payload={
+      popupEnabled:$("noticePopupEnabled").checked,
+      title:$("noticeTitle").value,
+      body:$("noticeBody").value,
+      marqueeEnabled:$("noticeMarqueeEnabled").checked,
+      marqueeText:$("noticeMarqueeText").value,
+      blockedOffDates:$("blockedOffDates").value,
+      sendPush
+    };
+    const r=await api("saveStaffNotice",payload);
+    toast(sendPush?(r.pushError?`公告已儲存，但推播失敗：${r.pushError}`:`公告已儲存，已推播 ${r.pushed||0} 位員工`):"公告與禁止排休日期已儲存");
+    await refresh();
+    await loadAdmin();
+  }catch(e){toast(e.message)}
+}
 async function publishSchedule(){
   try{
     const month=$("adminMonth").value;
@@ -452,8 +527,8 @@ if(sb){try{await api("reviewSubstitute",{row:+sb.dataset.adminSub,status:sb.data
 let b=e.target.closest("[data-off]");if(b){await api("reviewOff",{row:+b.dataset.off,status:b.dataset.status});await loadAdmin();await refresh();return}b=e.target.closest("[data-edit-emp]");if(b){const x=employees.find(v=>v.row==b.dataset.editEmp);if(!x)return;$("empEditRow").value=x.row;$("empName").value=x.name;$("empPin").value=x.pin;$("empRole").value=x.role;$("empSalaryType").value=x.salaryType;$("empId").value=x.id;$("empMonthly").value=x.monthly;$("empHourly").value=x.hourly;return}b=e.target.closest("[data-disable-emp]");if(b){await api("toggleEmployee",{row:+b.dataset.disableEmp});await loadAdmin();return}b=e.target.closest("[data-delete-shift]");if(b){await api("deleteShift",{row:+b.dataset.deleteShift});await loadAdmin();await refresh()}})
 $("tabs").onclick=e=>{const b=e.target.closest("[data-page]");if(b)page(b.dataset.page)};
 $("loginBtn").onclick=login;$("logoutBtn").onclick=logout;$("offSubmit").onclick=submitOff;$("subSubmit").onclick=submitSubstitute;$("oilSubmit").onclick=submitOil;$("salaryLoad").onclick=loadSalary;
-$("adminLoad").onclick=loadAdmin;$("saveShift").onclick=saveShift;$("saveEmployee").onclick=saveEmployee;$("saveSettings").onclick=saveSettings;$("publishSchedule").onclick=publishSchedule;$("exportPayroll").onclick=exportPayroll;
-$("finishShiftDay").onclick=finishShiftDay;
+$("adminLoad").onclick=loadAdmin;$("saveShift").onclick=saveShift;$("saveEmployee").onclick=saveEmployee;$("saveSettings").onclick=saveSettings;$("saveStaffNotice").onclick=()=>saveStaffNotice(false);$("saveAndPushStaffNotice").onclick=()=>saveStaffNotice(true);$("publishSchedule").onclick=publishSchedule;$("exportPayroll").onclick=exportPayroll;
+$("finishShiftDay").onclick=finishShiftDay;$("closeStaffNotice").onclick=closeStaffNotice;$("offDate").onchange=validateOffDate;
 $("adminMonth").onchange=()=>{const month=$("adminMonth").value,p=getScheduleProgress([],month);if(p.next)$("shiftDate").value=p.next;loadAdmin()};
 $("shiftDate").onchange=checkConflict;$("shiftEmployee").onchange=checkConflict;$("shiftType").onchange=()=>{autoFillShiftHours(true);checkConflict()};$("shiftCustom").oninput=()=>{if($("shiftType").value==="自訂")autoFillShiftHours(true)};$("oilPhoto").onchange=e=>{$("oilPreview").innerHTML=e.target.files[0]?`<img class="photo" src="${URL.createObjectURL(e.target.files[0])}">`:""};
 boot().catch(e=>toast(e.message));
