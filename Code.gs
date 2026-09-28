@@ -417,7 +417,10 @@ function payslip_(s,p){const x=salary_(s.name,p.month),u=users_().find(v=>v.name
 function moneyText_(n){return `NT$ ${Math.round(num_(n)).toLocaleString("en-US")}`}
 function admin_(s,p){adminOnly_(s);const month=month_(p.month);return out_({ok:true,employees:users_(),schedule:schedules_().filter(x=>x.date.slice(0,7)===month),leaveRequests:offs_().filter(x=>x.requestDate.slice(0,7)===month),pendingOff:offs_().filter(x=>x.status==="待審核"),pendingSubstitutes:substitutes_().filter(x=>x.status==="待老闆核准"),payroll:users_().filter(x=>x.status==="在職").map(x=>salary_(x.name,month)),settings:{oilPrice:num_(get_("目前油價")),efficiency:num_(get_("每公升公里數")),staffNotice:staffNotice_()}})}
 function export_(s,p){adminOnly_(s);const m=month_(p.month),r=users_().filter(x=>x.status==="在職").map(x=>salary_(x.name,m)),all=[["月份","姓名","薪資類型","總時數","基本薪資","獎金","里程補貼","扣款","實領薪資"],...r.map(x=>[x.month,x.name,x.salaryType,x.hours,x.basePay,x.bonuses,x.oilSubsidy,x.deductions,x.netPay])];return out_({ok:true,csv:all.map(a=>a.map(csv_).join(",")).join("\r\n")})}
-function rows_(n){const v=sh_(n).getDataRange().getValues(),h=v.shift().map(String);return v.map(r=>Object.fromEntries(h.map((x,i)=>[x,r[i]])))}function rowsR_(n){return rows_(n).map((x,i)=>({...x,_row:i+2}))}
+// Cache only within one read-only request. Writes always read live data.
+let requestRows_=null;
+function readRequest_(fn){requestRows_=Object.create(null);try{return fn()}finally{requestRows_=null}}
+function rows_(n){if(requestRows_&&Object.prototype.hasOwnProperty.call(requestRows_,n))return requestRows_[n].map(r=>({...r}));const v=sh_(n).getDataRange().getValues(),h=v.shift().map(String),rows=v.map(r=>Object.fromEntries(h.map((x,i)=>[x,r[i]])));if(requestRows_)requestRows_[n]=rows;return rows.map(r=>({...r}))}function rowsR_(n){return rows_(n).map((x,i)=>({...x,_row:i+2}))}
 function sh_(n){const s=SpreadsheetApp.getActive().getSheetByName(n);if(!s)throw Error("找不到工作表："+n);return s}
 function get_(k){const r=rows_(N.C).find(x=>String(x["設定項目"])===k);return r?r["設定值"]:""}function set_(k,v){const a=rowsR_(N.C).find(x=>String(x["設定項目"])===k);a?sh_(N.C).getRange(a._row,2).setValue(v):sh_(N.C).appendRow([k,v])}
 function out_(x){return ContentService.createTextOutput(JSON.stringify(x)).setMimeType(ContentService.MimeType.JSON)}
@@ -706,7 +709,7 @@ function notifyShiftDeleted_(
 function doPost(e){
  try{const p=JSON.parse(e.postData.contents||'{}');if(p.mode==='autoSchedule')return out_(autoScheduleApi(p.token,p.action,p.input));
  const mutations=['offRequest','oil','requestSubstitute','respondSubstitute','cancelSubstitute','reviewSubstitute','reviewOff','saveShift','deleteShift','saveEmployee','toggleEmployee','saveSettings','saveStaffNotice','publishSchedule'];
- if(!mutations.includes(p.mode))return legacyDoPost_(e);
+ if(!mutations.includes(p.mode))return readRequest_(()=>legacyDoPost_(e));
  const lock=LockService.getScriptLock();lock.waitLock(30000);try{return legacyDoPost_(e)}finally{lock.releaseLock()}
  }catch(err){return out_({ok:false,message:err.message})}
 }
