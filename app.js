@@ -1,7 +1,8 @@
 (()=>{
 "use strict";
+const safeStore={getItem(k){try{return window.localStorage.getItem(k)}catch(e){return null}},setItem(k,v){try{window.localStorage.setItem(k,v)}catch(e){}},removeItem(k){try{window.localStorage.removeItem(k)}catch(e){}}};
 const $=id=>document.getElementById(id),cfg=window.SAVAGE_CONFIG;
-let token=localStorage.getItem("savage_token")||"",me=null,data=null,employees=[],noticeShownKey="";
+let token=safeStore.getItem("savage_token")||"",me=null,data=null,employees=[],noticeShownKey="";
 const esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=x=>"$"+Math.round(Number(x||0)).toLocaleString("zh-TW");
 const taipeiDate=d=>new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Taipei",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);
@@ -29,14 +30,14 @@ function hideStatus(delay=0){
 }
 
 async function api(mode,p={}) {
-  const r=await fetch(cfg.API_URL,{
-    method:"POST",
-    headers:{"Content-Type":"text/plain;charset=utf-8"},
-    body:JSON.stringify({mode,token,...p})
-  });
-  const j=await r.json();
-  if(!j.ok)throw Error(j.message||"操作失敗");
-  return j;
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);
+  try {
+    if(!cfg||!cfg.API_URL)throw Error("未載入後端網址，請重新整理網頁。");
+    const r=await fetch(cfg.API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({mode,token,...p}),signal:controller.signal});
+    if(!r.ok)throw Error("後端連線失敗（HTTP "+r.status+"），請確認 Apps Script 部署權限。");
+    const raw=await r.text();let j;try{j=JSON.parse(raw)}catch(e){throw Error("後端未回傳系統資料，請確認 config.js 的網址及 Apps Script 網頁應用程式存取權限。");}
+    if(!j.ok)throw Error(j.message||"操作失敗");return j;
+  }catch(e){if(e.name==="AbortError")throw Error("連線超過20秒，請檢查網路後重試。");if(e instanceof TypeError)throw Error("無法連接員工系統，請檢查網路或後端部署網址。");throw e;}finally{clearTimeout(timer)}
 }
 
 async function linkOneSignalUser(user) {
@@ -93,11 +94,13 @@ async function boot() {
   if($("salaryMonth"))$("salaryMonth").value=ym();
   if($("adminMonth"))$("adminMonth").value=ym();
 
+  $("loginMsg").textContent="正在載入員工姓名…";
   const p=await api("publicConfig");
   $("loginName").innerHTML=(p.users||[])
     .map(x=>`<option>${esc(x)}</option>`)
     .join("");
 
+  $("loginMsg").textContent=(p.users||[]).length?"":"目前沒有可登入的在職員工，請檢查 Users 資料。";
   if(token){
     try{
       await refresh();
@@ -127,7 +130,7 @@ async function login() {
     const r=await api("login",{name,pin});
 
     token=r.token;
-    localStorage.setItem("savage_token",token);
+    safeStore.setItem("savage_token",token);
 
     me=r.user;
     data=r;
@@ -167,7 +170,7 @@ async function logout(){
   token="";
   me=null;
   data=null;
-  localStorage.removeItem("savage_token");
+  safeStore.removeItem("savage_token");
 
   $("appView").hidden=true;
   $("loginView").hidden=false;
@@ -443,7 +446,7 @@ function getScheduleProgress(rows,month){
   const total=daysInMonth(month);
   const scheduled=(rows||[]).map(x=>String(x.date||"")).filter(d=>d.slice(0,7)===month).sort();
   const latestScheduled=scheduled.at(-1)||"";
-  const saved=localStorage.getItem(progressKey(month))||"";
+  const saved=safeStore.getItem(progressKey(month))||"";
   const completed=[latestScheduled,saved].filter(Boolean).sort().at(-1)||"";
   const completedDay=completed?Math.min(Number(completed.slice(8,10)),total):0;
   const next=completedDay<total?`${month}-${String(completedDay+1).padStart(2,"0")}`:"";
@@ -473,7 +476,7 @@ async function finishShiftDay(){
   const date=$("shiftDate").value,month=$("adminMonth").value;
   if(!date) return toast("請先選擇排班日期");
   if(date.slice(0,7)!==month) return toast("排班日期和後台月份不同");
-  localStorage.setItem(progressKey(month),date);
+  safeStore.setItem(progressKey(month),date);
   const next=nextDate(date);
   if(next.slice(0,7)===month){$("shiftDate").value=next;toast(`已記錄，接著排 ${next}`)}
   else toast("這個月已排到最後一天");
@@ -531,5 +534,37 @@ $("adminLoad").onclick=loadAdmin;$("saveShift").onclick=saveShift;$("saveEmploye
 $("finishShiftDay").onclick=finishShiftDay;$("closeStaffNotice").onclick=closeStaffNotice;$("offDate").onchange=validateOffDate;
 $("adminMonth").onchange=()=>{const month=$("adminMonth").value,p=getScheduleProgress([],month);if(p.next)$("shiftDate").value=p.next;loadAdmin()};
 $("shiftDate").onchange=checkConflict;$("shiftEmployee").onchange=checkConflict;$("shiftType").onchange=()=>{autoFillShiftHours(true);checkConflict()};$("shiftCustom").oninput=()=>{if($("shiftType").value==="自訂")autoFillShiftHours(true)};$("oilPhoto").onchange=e=>{$("oilPreview").innerHTML=e.target.files[0]?`<img class="photo" src="${URL.createObjectURL(e.target.files[0])}">`:""};
-boot().catch(e=>toast(e.message));
+function startLogin(){const b=$("retryLoginLoad");if(b)b.disabled=true;boot().catch(e=>{$("loginMsg").textContent=e.message;toast(e.message)}).finally(()=>{if(b)b.disabled=false})}
+$("retryLoginLoad").onclick=startLogin;
+/* 整月自動排班，沿用 app.js 的 api、token 及老闆登入。 */
+let autoState={rules:null,draft:null,employees:[],busy:false};
+const au=id=>document.getElementById(id);
+const auEsc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function auRun(fn){if(autoState.busy)return;autoState.busy=true;au('auWork').disabled=true;au('auStatus').textContent='處理中…';try{await fn()}catch(e){au('auStatus').textContent=e.message;toast(e.message)}finally{autoState.busy=false;au('auWork').disabled=false}}
+async function auCall(action,input={}){return api('autoSchedule',{action,input})}
+function auMonth(){return au('auMonth').value}
+function auOptions(values,chosen){return values.map(x=>`<option value="${auEsc(x.value)}" ${x.value===chosen?'selected':''}>${auEsc(x.text)}</option>`).join('')}
+function auRulesView(){const r=autoState.rules;au('auRules').innerHTML=`<h3>各班需要人數</h3><p>每週固定規則會重複套用。0 表示該天不用這個班。初始數字是範例，請先依店內需求修改。</p><div class="table-wrap"><table><thead><tr><th>班別時間</th><th>計薪時數</th>${['日','一','二','三','四','五','六'].map(d=>'<th>週'+d+'</th>').join('')}<th></th></tr></thead><tbody>${r.shifts.map((t,i)=>`<tr><td><input aria-label="班別時間" data-shift="${i}" data-field="label" value="${auEsc(t.label)}"></td><td><input aria-label="計薪時數" type="number" min="0.5" step="0.5" data-shift="${i}" data-field="hours" value="${t.hours}"></td>${t.need.map((n,d)=>`<td><input aria-label="週${d}人數" type="number" min="0" step="1" data-shift="${i}" data-day="${d}" value="${n}"></td>`).join('')}<td><button data-remove-shift="${i}">移除</button></td></tr>`).join('')}</tbody></table></div><button id="auAddShift">新增班別</button><h3>員工可上班時段</h3>${r.employees.map((e,i)=>`<fieldset class="au-person"><legend><label><input type="checkbox" data-emp="${i}" data-field="enabled" ${e.enabled?'checked':''}> ${auEsc(e.name)} 參與排班</label></legend><div>可上班別 ${r.shifts.map(t=>`<label class="au-check"><input type="checkbox" data-emp="${i}" data-slot="${auEsc(t.id)}" ${e.shifts.includes(t.id)?'checked':''}>${auEsc(t.label)}</label>`).join('')}</div><div>可上星期 ${['日','一','二','三','四','五','六'].map((d,k)=>`<label class="au-check"><input type="checkbox" data-emp="${i}" data-week="${k}" ${e.days.includes(k)?'checked':''}>${d}</label>`).join('')}</div><div class="grid2"><label>每月工時上限<input type="number" min="0" step="0.5" data-emp="${i}" data-field="maxHours" value="${e.maxHours}"></label><label>最多連續上班天數<input type="number" min="1" max="31" data-emp="${i}" data-field="maxDays" value="${e.maxDays}"></label></div></fieldset>`).join('')}<label>店休日期（逗號或換行分隔）<textarea id="auClosed" placeholder="2026-10-01">${auEsc(r.closedDates.join('\n'))}</textarea></label><button id="auSaveRules">儲存規則</button>`;
+ au('auRules').onchange=e=>{const el=e.target;if(el.dataset.shift!==undefined){const t=r.shifts[+el.dataset.shift];if(el.dataset.day!==undefined)t.need[+el.dataset.day]=Number(el.value);else t[el.dataset.field]=el.dataset.field==='label'?el.value:Number(el.value)}if(el.dataset.emp!==undefined){const person=r.employees[+el.dataset.emp];if(el.dataset.slot!==undefined){person.shifts=el.checked?[...new Set([...person.shifts,el.dataset.slot])]:person.shifts.filter(x=>x!==el.dataset.slot)}else if(el.dataset.week!==undefined){const d=+el.dataset.week;person.days=el.checked?[...new Set([...person.days,d])]:person.days.filter(x=>x!==d)}else person[el.dataset.field]=el.type==='checkbox'?el.checked:Number(el.value)}if(el.id==='auClosed')r.closedDates=el.value.split(/[\s,，]+/).filter(Boolean);au('auStatus').textContent='規則已修改，請儲存並重新產生草稿。';};
+ au('auAddShift').onclick=()=>{r.shifts.push({id:'S'+Date.now(),label:'10:00~14:00',hours:4,need:[0,0,0,0,0,0,0]});auRulesView()};
+ au('auRules').querySelectorAll('[data-remove-shift]').forEach(b=>b.onclick=()=>{const id=r.shifts[+b.dataset.removeShift].id;r.shifts.splice(+b.dataset.removeShift,1);r.employees.forEach(e=>e.shifts=e.shifts.filter(x=>x!==id));auRulesView()});
+ au('auSaveRules').onclick=()=>auRun(async()=>{await auCall('rules',{rules:r});au('auStatus').textContent='規則已儲存，下個月也可沿用。'});
+}
+function auDraftView(){const d=autoState.draft,box=au('auDraft');if(!d){box.innerHTML='<p>尚未產生草稿。</p>';return}const done=d.status==='confirmed',r=autoState.rules;box.innerHTML=`<h3>${auEsc(d.month)} ${done?'已寫入正式班表':'班表草稿'}</h3><p>下表是本次新增班次；正式班表的既有班次會保留。修改員工會自動鎖定，重新產生時只重排未鎖定的草稿班次。</p><div class="au-summary">${(d.summary||[]).map(s=>`<span class="badge">${auEsc(s.name)}：${s.hours}／${s.maxHours} 小時</span>`).join(' ')}</div><p id="auDirty" class="warning" hidden>草稿已修改，請按「檢查並儲存草稿」更新缺人提示與工時。</p><div class="table-wrap"><table><tr><th>日期</th><th>班別</th><th>員工</th><th>鎖定</th><th></th></tr>${d.assignments.map((a,i)=>`<tr><td>${auEsc(a.date)}</td><td>${auEsc(r.shifts.find(t=>t.id===a.shift)?.label||a.shift)}</td><td><select aria-label="排班員工" data-au-person="${i}" ${done?'disabled':''}>${auOptions(r.employees.filter(e=>e.enabled).map(e=>({value:e.name,text:e.name})),a.name)}</select></td><td><input aria-label="鎖定班次" type="checkbox" data-au-lock="${i}" ${a.locked?'checked':''} ${done?'disabled':''}></td><td><button data-au-delete="${i}" ${done?'disabled':''}>移除</button></td></tr>`).join('')}</table></div><h3>缺人時段：${d.gaps.length} 筆</h3>${d.gaps.map(g=>`<div class="warning">${auEsc(g.date)} ${auEsc(r.shifts.find(t=>t.id===g.shift)?.label||g.shift)} 缺 ${g.missing} 人<br><small>${auEsc(g.reasons)}</small></div>`).join('')||'<p>目前需求已排滿。</p>'}${done?'':`<div class="grid3"><label>日期<input id="auManualDate" type="date" min="${d.month}-01" max="${d.month}-${daysInMonth(d.month)}"></label><label>班別<select id="auManualShift">${auOptions(r.shifts.map(t=>({value:t.id,text:t.label})))}</select></label><label>員工<select id="auManualName">${auOptions(r.employees.filter(e=>e.enabled).map(e=>({value:e.name,text:e.name})))}</select></label></div><button id="auManualAdd">加入指定班次並鎖定</button><div class="au-actions"><button id="auReview">檢查並儲存草稿</button><button id="auConfirm" class="primary">確認寫入正式班表</button></div><label class="au-check"><input id="auAllowGaps" type="checkbox"> 我已檢查，允許保留缺人時段</label><p>確認後員工即可看到新班次。需要推播時，使用原本的「公布班表並通知全體員工」。</p>`}`;
+ if(done)return;
+ const dirty=()=>au('auDirty').hidden=false;
+ box.querySelectorAll('[data-au-person]').forEach(el=>el.onchange=()=>{const a=d.assignments[+el.dataset.auPerson];a.name=el.value;a.locked=true;auDraftView();dirty()});
+ box.querySelectorAll('[data-au-lock]').forEach(el=>el.onchange=()=>{d.assignments[+el.dataset.auLock].locked=el.checked;dirty()});
+ box.querySelectorAll('[data-au-delete]').forEach(el=>el.onclick=()=>{d.assignments.splice(+el.dataset.auDelete,1);auDraftView();dirty()});
+ au('auManualAdd').onclick=()=>{const date=au('auManualDate').value;if(date.slice(0,7)!==d.month)return toast('請選擇本月日期');d.assignments.push({date,shift:au('auManualShift').value,name:au('auManualName').value,locked:true});auDraftView();dirty()};
+ au('auReview').onclick=()=>auRun(async()=>{const x=await auCall('review',{month:d.month,id:d.id,assignments:d.assignments});autoState.draft=x.draft;auDraftView();au('auStatus').textContent='草稿已檢查及儲存。'});
+ au('auConfirm').onclick=()=>auRun(async()=>{const allowGaps=au('auAllowGaps').checked;const x=await auCall('review',{month:d.month,id:d.id,assignments:d.assignments});autoState.draft=x.draft;auDraftView();if(x.draft.gaps.length&&!allowGaps)throw Error('仍有缺人時段，請調整或勾選允許缺額。');if(!confirm('確認將 '+d.month+' 草稿寫入正式班表？員工將可看到新增班次。')){au('auStatus').textContent='草稿已儲存，尚未寫入正式班表。';return}const result=await auCall('confirm',{month:d.month,id:d.id,assignments:x.draft.assignments,allowGaps});autoState.draft.status='confirmed';auDraftView();au('auStatus').textContent='已新增 '+(result.count||0)+' 筆正式班次。';await loadAdmin();await refresh();});
+}
+au('auLoad').onclick=()=>auRun(async()=>{const x=await auCall('load',{month:auMonth()});autoState.rules=x.rules;autoState.employees=x.employees;const names=new Set(x.employees.map(e=>e.name));autoState.rules.employees=autoState.rules.employees.filter(e=>names.has(e.name));for(const e of x.employees)if(!autoState.rules.employees.some(v=>v.name===e.name))autoState.rules.employees.push({name:e.name,enabled:false,shifts:[],days:[0,1,2,3,4,5,6],maxHours:200,maxDays:6});autoState.draft=x.draft;auRulesView();auDraftView();au('auGenerate').disabled=false;au('auStatus').textContent='已載入。先確認規則，再產生草稿。'});
+au('auGenerate').onclick=()=>auRun(async()=>{if(!autoState.rules)throw Error('請先載入規則');if(autoState.draft&&autoState.draft.month!==auMonth())throw Error('月份已變更，請先重新載入');await auCall('rules',{rules:autoState.rules});const x=await auCall('generate',{month:auMonth(),fixed:autoState.draft?.assignments||[]});autoState.draft=x.draft;auDraftView();au('auStatus').textContent='草稿已產生。尚未寫入正式班表。';});
+au('auMonth').value=ym();au('auMonth').onchange=()=>{autoState.draft=null;autoState.rules=null;au('auRules').innerHTML='';au('auDraft').innerHTML='';au('auGenerate').disabled=true;au('auStatus').textContent='請載入所選月份';};
+
+$('logoutBtn').addEventListener('click',()=>{autoState.rules=null;autoState.draft=null;au('auRules').innerHTML='';au('auDraft').innerHTML='';au('auGenerate').disabled=true;au('auStatus').textContent='請先載入月份。';});
+
+startLogin();
 })();

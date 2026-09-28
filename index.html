@@ -28,7 +28,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="小野人員工系統">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>小野人員工系統</title><link rel="stylesheet" href="style.css?v=20260815-1">
+<title>小野人員工系統</title><link rel="stylesheet" href="style.css?v=20260929-login2">
 </head>
 <body>
 <main class="shell">
@@ -36,7 +36,7 @@
 <div class="brand">小野人餐盒製造所</div><h1>員工排班與薪資系統</h1>
 <label>姓名<select id="loginName"></select></label>
 <label>密碼<input id="loginPin" type="password" inputmode="numeric"></label>
-<button id="loginBtn" class="primary">登入</button><p id="loginMsg" class="danger"></p>
+<button id="loginBtn" class="primary">登入</button><button id="retryLoginLoad" type="button">重新載入姓名</button><p id="loginMsg" class="danger"></p>
 </section>
 
 <section id="appView" hidden>
@@ -127,6 +127,7 @@
   </div>
 </div>
 
+<div class="card" id="autoSchedulePanel"><fieldset id="auWork" style="border:0;padding:0;margin:0;min-width:0"><h2>整月自動排班</h2><p>設定一次，逐月沿用。待審核與已核准排休都會避開；晚班排休仍可排不衝突的早班。</p><label>排班月份<input id="auMonth" type="month"></label><div class="au-actions"><button id="auLoad">載入規則與草稿</button><button id="auGenerate" class="primary" disabled>產生／重新產生整月草稿</button></div><p id="auStatus" role="status">請先載入月份。</p><div id="auRules"></div><div id="auDraft"></div></fieldset></div>
 <div class="card"><h2>排班管理</h2>
 <div id="scheduleProgress" style="margin-bottom:14px"></div>
 <div class="grid3"><label>日期<input id="shiftDate" type="date"></label>
@@ -174,5 +175,6 @@
     <p id="statusMessage">正在確認帳號資料，請稍候…</p>
   </div>
 </div>
-<script src="config.js"></script><script src="app.js?v=20260815-1"></script>
+<script src="config.js"></script><script src="app.js?v=20260929-login2"></script>
+
 </body></html>
