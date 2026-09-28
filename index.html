@@ -28,7 +28,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="小野人員工系統">
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>小野人員工系統</title><link rel="stylesheet" href="style.css?v=20260929-mobile1">
+<title>小野人員工系統</title><link rel="stylesheet" href="style.css?v=20260929-login2">
 </head>
 <body>
 <main class="shell">
@@ -41,6 +41,7 @@
 
 <section id="appView" hidden>
 <header class="top"><div><b id="hello"></b><small id="todayText"></small></div><button id="logoutBtn">登出</button></header>
+<div id="dataLoadStatus" class="card" role="status" hidden><p id="dataLoadMessage"></p><button id="retryStaffData" class="primary" hidden>重新載入資料</button></div>
 <div id="staffMarquee" class="staff-marquee" hidden>
   <div class="staff-marquee-label">📢 員工公告</div>
   <div class="staff-marquee-window"><div id="staffMarqueeText" class="staff-marquee-text"></div></div>
@@ -175,6 +176,6 @@
     <p id="statusMessage">正在確認帳號資料，請稍候…</p>
   </div>
 </div>
-<script src="holiday-calendar.js?v=20260929-holiday1"></script><script src="config.js"></script><script src="app.js?v=20260929-mobile1"></script>
+<script src="holiday-calendar.js?v=20260929-holiday1"></script><script src="config.js"></script><script src="app.js?v=20260929-login2"></script>
 
 </body></html>

@@ -30,14 +30,14 @@ function hideStatus(delay=0){
 }
 
 async function api(mode,p={}) {
-  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),45000);
   try {
     if(!cfg||!cfg.API_URL)throw Error("未載入後端網址，請重新整理網頁。");
-    const r=await fetch(cfg.API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({mode,token,...p}),signal:controller.signal});
-    if(!r.ok)throw Error("後端連線失敗（HTTP "+r.status+"），請確認 Apps Script 部署權限。");
+    const r=await fetch(cfg.API_URL,{method:"POST",cache:"no-store",credentials:"omit",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({mode,token,...p}),signal:controller.signal});
+    if(!r.ok)throw Error("後端回應失敗（HTTP "+r.status+"），請稍後重試。");
     const raw=await r.text();let j;try{j=JSON.parse(raw)}catch(e){throw Error("後端未回傳系統資料，請確認 config.js 的網址及 Apps Script 網頁應用程式存取權限。");}
     if(!j.ok)throw Error(j.message||"操作失敗");return j;
-  }catch(e){if(e.name==="AbortError")throw Error("連線超過20秒，請檢查網路後重試。");if(e instanceof TypeError)throw Error("無法連接員工系統，請檢查網路或後端部署網址。");throw e;}finally{clearTimeout(timer)}
+  }catch(e){if(e.name==="AbortError")throw Error("伺服器回應超過45秒，請稍後重試。這不代表密碼錯誤。");if(e instanceof TypeError)throw Error("無法連接員工系統，請檢查網路或後端部署網址。");throw e;}finally{clearTimeout(timer)}
 }
 
 async function linkOneSignalUser(user) {
@@ -106,7 +106,8 @@ async function boot() {
       await refresh();
       await linkOneSignalUser(me);
     }catch(e){
-      await logout();
+      if(e.message.includes("登入已逾時"))await logout();
+      else throw e;
     }
   }
 }
@@ -127,23 +128,18 @@ async function login() {
   showStatus("loading","登入中","正在確認帳號與密碼，請稍候…");
 
   try{
-    const r=await api("login",{name,pin});
+    const r=await api("login",{name,pin,lightweight:true});
 
     token=r.token;
     safeStore.setItem("savage_token",token);
 
     me=r.user;
-    data=r;
-
-    await linkOneSignalUser(me);
-
-    showStatus("success",`已登入，${me.name}，歡迎回來！`,"");
-
-    setTimeout(()=>{
-      showApp();
-      renderAll();
-      hideStatus();
-    },900);
+    data=null;
+    $("loginPin").value="";
+    showApp();
+    hideStatus();
+    void linkOneSignalUser(me);
+    await loadSignedInData();
   }catch(e){
     const msg=e.message||"登入失敗，請稍後再試";
 
@@ -173,11 +169,21 @@ async function logout(){
   safeStore.removeItem("savage_token");
 
   $("appView").hidden=true;
+  $("appView").classList.remove("data-pending");
+  $("dataLoadStatus").hidden=true;
   $("loginView").hidden=false;
   if($("loginPin"))$("loginPin").value="";
 }
 function showApp(){$("loginView").hidden=true;$("appView").hidden=false;$("hello").textContent=`${me.name}，你好`;$("todayText").textContent=new Date().toLocaleDateString("zh-TW",{dateStyle:"full"});$("adminTab").hidden=me.role!=="admin"}
-async function refresh(month){const r=await api("refresh",{month:month||ym()});me=r.user;data=r;showApp();renderAll()}
+async function refresh(month){const requestedToken=token;const r=await api("refresh",{month:month||ym()});if(token!==requestedToken)return;me=r.user;data=r;showApp();renderAll()}
+async function loadSignedInData(){
+ const requestedToken=token,box=$("dataLoadStatus"),button=$("retryStaffData");
+ $("appView").classList.add("data-pending");box.hidden=false;button.hidden=true;
+ $("dataLoadMessage").textContent="登入成功，正在載入班表與個人資料…";
+ try{await refresh();if(token!==requestedToken)return;$("appView").classList.remove("data-pending");box.hidden=true}
+ catch(e){if(token!==requestedToken)return;if(e.message.includes("登入已逾時")){await logout();$("loginMsg").textContent=e.message;return}
+ $("dataLoadMessage").textContent="已登入，但資料尚未載入。"+e.message;button.hidden=false;button.onclick=loadSignedInData;}
+}
 function renderAll(){renderStaffNotice();renderToday();renderMonth();renderOff();renderSubstitute();renderOil();renderSalary(data.salary)}
 
 function noticeConfig(){return(data&&data.staffNotice)||{}}
