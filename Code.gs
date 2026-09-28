@@ -715,7 +715,7 @@ function autoScheduleApi(token, action, input) {
   try {
     ensureTimeZone_();
     const s=sess_(token); adminOnly_(s); if(!users_().some(u=>u.name===s.name&&u.role==='admin'&&u.status==='在職'))throw Error('管理員權限已停用'); input=input||{};
-    if(action==='load')return {ok:true,rules:asRules_(),employees:users_().filter(u=>u.status==='在職').map(u=>({name:u.name,id:u.id,role:u.role})),draft:asReadDraft_(input.month)};
+    if(action==='load')return {ok:true,features:['dateOverrides-v1'],rules:asRules_(),employees:users_().filter(u=>u.status==='在職').map(u=>({name:u.name,id:u.id,role:u.role})),draft:asReadDraft_(input.month)};
     const lock=LockService.getScriptLock();lock.waitLock(30000);
     try {
       if(action==='rules'){asValidateRules_(input.rules);set_('自動排班規則',JSON.stringify(input.rules));return {ok:true};}
@@ -766,6 +766,12 @@ function asValidateRules_(r){
  r.shifts.forEach(t=>{const range=asRange_(t.label);if(!/^[A-Za-z0-9_-]{1,20}$/.test(t.id)||ids.has(t.id)||!range||range[1]<=range[0]||range[0]<0||range[1]>24||!Number.isFinite(t.hours)||t.hours<=0||t.hours>range[1]-range[0]||!Array.isArray(t.need)||t.need.length!==7||t.need.some(n=>!Number.isInteger(n)||n<0||n>50))throw Error('班別格式錯誤：代碼不可重複，需有效時間、工時及週日到週六人數');ids.add(t.id);});
  r.employees.forEach(e=>{if(!e.name||names.has(e.name)||!Array.isArray(e.shifts)||e.shifts.some(x=>!ids.has(x))||!Array.isArray(e.days)||e.days.some(d=>!Number.isInteger(d)||d<0||d>6)||!Number.isFinite(e.maxHours)||e.maxHours<0||!Number.isInteger(e.maxDays)||e.maxDays<1||e.maxDays>31)throw Error('員工規則錯誤：'+e.name);names.add(e.name);});
  r.closedDates.forEach(d=>asDateCheck_(d));
+ const overrides=r.dateOverrides||{};
+ if(typeof overrides!=='object'||Array.isArray(overrides))throw Error('指定日期規則格式錯誤');
+ Object.keys(overrides).forEach(date=>{asDateCheck_(date);const o=overrides[date];
+ if(!o||!['open','closed'].includes(o.mode)||!o.need||typeof o.need!=='object'||Array.isArray(o.need))throw Error('指定日期規則格式錯誤：'+date);
+ Object.keys(o.need).forEach(id=>{const n=o.need[id];if(!ids.has(id)||!Number.isInteger(n)||n<0||n>50)throw Error('指定日期人數錯誤：'+date);});
+ });
 }
 function asDateCheck_(d){if(!/^\d{4}-\d{2}-\d{2}$/.test(d)||new Date(d+'T00:00:00Z').toISOString().slice(0,10)!==d)throw Error('日期格式錯誤：'+d);}
 function asRange_(label){if(label==='全天班')return [9,20];const m=String(label).match(/^(\d{2}):(\d{2})[~～-](\d{2}):(\d{2})$/);if(!m||+m[2]>59||+m[4]>59)return null;return [+m[1]+ +m[2]/60,+m[3]+ +m[4]/60];}
@@ -783,7 +789,7 @@ function asBuild_(month,rules,data,fixed,onlyFixed){
  const last=new Date(Date.UTC(+month.slice(0,4),+month.slice(5),0)).getUTCDate();
  const valid=data.schedule.filter(s=>s.status!=='取消'&&!s.timeSlot.includes('排休'));
  for(const s of valid){const range=asRange_(s.timeSlot);busy.push({date:s.date,name:s.employeeName,range});(days[s.employeeName]||(days[s.employeeName]=new Set())).add(s.date);if(s.date.slice(0,7)===month)hours[s.employeeName]=(hours[s.employeeName]||0)+(s.plannedHours==null?infer_(s.timeSlot):s.plannedHours);}
- for(let d=1;d<=last;d++){const date=month+'-'+String(d).padStart(2,'0'),dow=new Date(date+'T00:00:00Z').getUTCDay();if(rules.closedDates.includes(date))continue;for(const t of shifts){const range=asRange_(t.label);const covered=new Set(busy.filter(b=>b.date===date&&b.range&&b.range[0]<=range[0]&&b.range[1]>=range[1]).map(b=>b.name)).size;slots.push({date,dow,shift:t.id,need:Math.max(0,t.need[dow]-covered)});}}
+ for(let d=1;d<=last;d++){const date=month+'-'+String(d).padStart(2,'0'),dow=new Date(date+'T00:00:00Z').getUTCDay();const override=(rules.dateOverrides||{})[date];if(rules.closedDates.includes(date)||override?.mode==='closed')continue;for(const t of shifts){const range=asRange_(t.label);const covered=new Set(busy.filter(b=>b.date===date&&b.range&&b.range[0]<=range[0]&&b.range[1]>=range[1]).map(b=>b.name)).size;slots.push({date,dow,shift:t.id,need:Math.max(0,(override?.mode==='open'&&Object.prototype.hasOwnProperty.call(override.need,t.id)?override.need[t.id]:t.need[dow])-covered)});}}
  function reason(e,slot){
  const t=shifts.find(t=>t.id===slot.shift),r=asRange_(t.label);
  if(!e||!e.shifts.includes(t.id)||!e.days.includes(slot.dow))return '不在可上班時段';
